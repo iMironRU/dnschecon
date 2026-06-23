@@ -1,6 +1,6 @@
 import type { Env, WatchDefinition } from "./types.js";
 import { WatchDO } from "./watch-do.js";
-import { fetchWatchDefinition, listWatchIds, createWatchFile } from "./github.js";
+import { fetchWatchDefinition, listWatchIds, createWatchFile, deleteWatchFile } from "./github.js";
 import { validateInitData } from "./telegram.js";
 import { verifyGithubWebhook } from "./auth.js";
 import { invalidateRegistryCache } from "./resolvers.js";
@@ -87,6 +87,10 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     return handleStartWatch(id, env);
   }
 
+  if (method === "DELETE" && sub === "") {
+    return handleDeleteWatch(id, env);
+  }
+
   return notFound();
 }
 
@@ -160,6 +164,17 @@ async function handleCreateWatch(request: Request, env: Env): Promise<Response> 
       body: JSON.stringify(def),
     });
     return new Response(resp.body, { status: resp.status, headers: { "Content-Type": "application/json" } });
+  } catch (e) {
+    return json({ ok: false, error: String(e) }, 500);
+  }
+}
+
+async function handleDeleteWatch(id: string, env: Env): Promise<Response> {
+  try {
+    const stub = getDoStub(id, env);
+    await stub.fetch(doUrl(id, "cancel"), { method: "POST" }).catch(() => {});
+    await deleteWatchFile(id, env);
+    return json({ ok: true });
   } catch (e) {
     return json({ ok: false, error: String(e) }, 500);
   }

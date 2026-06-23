@@ -327,7 +327,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
     <button class="btn-sec" id="btn-pause"            data-i18n="btnPause"></button>
     <button class="btn-sec hidden" id="btn-resume"    data-i18n="btnResume"></button>
     <button class="btn-sec hidden" id="btn-retry"     data-i18n="btnRetry"></button>
-    <button class="btn-del" id="btn-cancel"           data-i18n="btnCancel"></button>
+    <button class="btn-del hidden" id="btn-cancel"    data-i18n="btnCancel"></button>
+    <button class="btn-del" id="btn-delete"           data-i18n="btnDelete"></button>
   </div>
 </div>
 
@@ -367,7 +368,9 @@ const STRINGS = {
     btnPause:    'Пауза',
     btnResume:   'Продолжить',
     btnRetry:    'Повторить',
-    btnCancel:   'Отмена',
+    btnCancel:   'Остановить',
+    btnDelete:   'Удалить',
+    confirmDelete: 'Удалить слежение? Файл будет удалён из репозитория.',
     secTracking: 'Активные',
     secCompleted:'Завершённые',
     secWatches:  'Watches',
@@ -417,7 +420,9 @@ const STRINGS = {
     btnPause:    'Pause',
     btnResume:   'Resume',
     btnRetry:    'Retry',
-    btnCancel:   'Cancel',
+    btnCancel:   'Stop',
+    btnDelete:   'Delete',
+    confirmDelete: 'Delete this watch? The file will be removed from the repository.',
     secTracking: 'Tracking',
     secCompleted:'Completed',
     secWatches:  'Watches',
@@ -732,7 +737,7 @@ function renderDetail(s) {
   document.getElementById('btn-pause').classList.toggle('hidden',!a);
   document.getElementById('btn-resume').classList.toggle('hidden',!p);
   document.getElementById('btn-retry').classList.toggle('hidden',!retryable);
-  document.getElementById('btn-cancel').classList.toggle('hidden',!a&&!p&&!retryable);
+  document.getElementById('btn-cancel').classList.toggle('hidden',!a&&!p);
 }
 
 function startPoll(){ stopPoll(); pollT=setInterval(refreshDetail,4000); }
@@ -751,6 +756,21 @@ function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
       btn.disabled = false;
     }
   });
+});
+
+document.getElementById('btn-delete').addEventListener('click', async () => {
+  if (!confirm(t('confirmDelete'))) return;
+  haptic('medium');
+  const btn = document.getElementById('btn-delete');
+  btn.disabled = true;
+  try {
+    await api(`/api/watches/${watchId}`, { method: 'DELETE' });
+    stopPoll();
+    nav('list');
+    loadWatches();
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 /* ── Boot ─────────────────────────────────────────────── */

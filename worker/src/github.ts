@@ -91,6 +91,24 @@ export async function createWatchFile(
   await createRepoFile(path, yaml, `dnschecon: add watch ${def.id}`, env);
 }
 
+export async function deleteWatchFile(id: string, env: Env): Promise<void> {
+  const path = `watches/${id}.yaml`;
+  const url = `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`;
+  const existing = await ghFetch(`${url}?ref=${env.GITHUB_BRANCH}`, env);
+  if (!existing.ok) return; // already gone
+  const { sha }: { sha: string } = await existing.json();
+  const body = JSON.stringify({
+    message: `dnschecon: delete watch ${id}`,
+    sha,
+    branch: env.GITHUB_BRANCH,
+  });
+  const resp = await ghFetch(url, env, { method: "DELETE", body });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`GitHub delete failed ${resp.status}: ${text}`);
+  }
+}
+
 function ghFetch(
   url: string,
   env: Env,
