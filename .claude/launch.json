@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "4242", "--directory", "miniapp"],
       "port": 4242
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4243", "--directory", "docs"],
+      "port": 4243
     }
   ]
 }
