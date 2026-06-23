@@ -326,6 +326,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   <div class="act-bar">
     <button class="btn-sec" id="btn-pause"            data-i18n="btnPause"></button>
     <button class="btn-sec hidden" id="btn-resume"    data-i18n="btnResume"></button>
+    <button class="btn-sec hidden" id="btn-retry"     data-i18n="btnRetry"></button>
     <button class="btn-del" id="btn-cancel"           data-i18n="btnCancel"></button>
   </div>
 </div>
@@ -365,6 +366,7 @@ const STRINGS = {
     secResolvers:'Резолверы',
     btnPause:    'Пауза',
     btnResume:   'Продолжить',
+    btnRetry:    'Повторить',
     btnCancel:   'Отмена',
     secTracking: 'Активные',
     secCompleted:'Завершённые',
@@ -414,6 +416,7 @@ const STRINGS = {
     secResolvers:'Resolvers',
     btnPause:    'Pause',
     btnResume:   'Resume',
+    btnRetry:    'Retry',
     btnCancel:   'Cancel',
     secTracking: 'Tracking',
     secCompleted:'Completed',
@@ -725,20 +728,28 @@ function renderDetail(s) {
   }).join('');
 
   const a=s.status==='active', p=s.status==='paused';
+  const retryable = s.status==='error'||s.status==='timeout';
   document.getElementById('btn-pause').classList.toggle('hidden',!a);
   document.getElementById('btn-resume').classList.toggle('hidden',!p);
-  document.getElementById('btn-cancel').classList.toggle('hidden',!a&&!p);
+  document.getElementById('btn-retry').classList.toggle('hidden',!retryable);
+  document.getElementById('btn-cancel').classList.toggle('hidden',!a&&!p&&!retryable);
 }
 
 function startPoll(){ stopPoll(); pollT=setInterval(refreshDetail,4000); }
 function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
 
-['pause','resume','cancel'].forEach(action=>{
+['pause','resume','cancel','retry'].forEach(action=>{
   document.getElementById('btn-'+action).addEventListener('click',async()=>{
     if (action==='cancel'&&!confirm(t('confirmCancel'))) return;
     haptic('medium');
-    await api(`/api/watches/${watchId}/${action}`,{method:'POST'});
-    await refreshDetail();
+    const btn = document.getElementById('btn-'+action);
+    btn.disabled = true;
+    try {
+      await api(`/api/watches/${watchId}/${action}`,{method:'POST'});
+      await refreshDetail();
+    } finally {
+      btn.disabled = false;
+    }
   });
 });
 

@@ -83,6 +83,10 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     return doAction(id, "cancel", env);
   }
 
+  if (method === "POST" && sub === "/retry") {
+    return handleStartWatch(id, env);
+  }
+
   return notFound();
 }
 
