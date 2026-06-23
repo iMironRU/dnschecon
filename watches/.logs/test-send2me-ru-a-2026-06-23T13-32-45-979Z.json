@@ -1,0 +1,65 @@
+{
+  "id": "test-send2me-ru-a",
+  "status": "done",
+  "startedAt": "2026-06-23T13:32:18.219Z",
+  "completedAt": "2026-06-23T13:32:45.979Z",
+  "roundNo": 1,
+  "perResolverState": {
+    "google-de": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    },
+    "google-us": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    },
+    "google-jp": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    },
+    "google-br": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    },
+    "google-ru": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    },
+    "google-au": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    },
+    "cloudflare": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "185.199.108.155"
+      ],
+      "lastUpdated": 1782221565884
+    }
+  }
+}
