@@ -23,6 +23,11 @@ export default {
       return handleGithubWebhook(request, env);
     }
 
+    // Telegram bot webhook
+    if (pathname === "/webhook/telegram" && method === "POST") {
+      return handleTelegramWebhook(request, env);
+    }
+
     // API routes — require Telegram initData auth
     if (pathname.startsWith("/api/")) {
       const initData = request.headers.get("X-Telegram-InitData");
@@ -160,6 +165,128 @@ async function doAction(id: string, action: string, env: Env): Promise<Response>
   const stub = getDoStub(id, env);
   const resp = await stub.fetch(doUrl(id, action), { method: "POST" });
   return new Response(resp.body, { status: resp.status, headers: { "Content-Type": "application/json" } });
+}
+
+const WORKER_URL = "https://dnschecon.mal-9a0.workers.dev";
+
+async function handleTelegramWebhook(request: Request, env: Env): Promise<Response> {
+  // Verify secret token header (set when registering the webhook)
+  const secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
+  if (secret !== env.TELEGRAM_WEBHOOK_SECRET) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  let update: TelegramUpdate;
+  try {
+    update = await request.json();
+  } catch {
+    return new Response("Bad Request", { status: 400 });
+  }
+
+  const msg = update.message;
+  if (!msg?.text) return new Response("OK");
+
+  const chatId = msg.chat.id;
+  const text = msg.text.trim();
+
+  if (text.startsWith("/start")) {
+    await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: WELCOME_TEXT,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: "🚀 Открыть DNSChecon",
+            web_app: { url: WORKER_URL },
+          },
+        ]],
+      },
+    });
+  } else if (text.startsWith("/help")) {
+    await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: HELP_TEXT,
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "📡 Открыть приложение", web_app: { url: WORKER_URL } },
+        ]],
+      },
+    });
+  } else if (text.startsWith("/status")) {
+    await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: "📋 Используй приложение для просмотра активных watch'ей.",
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "📡 Открыть DNSChecon", web_app: { url: WORKER_URL } },
+        ]],
+      },
+    });
+  }
+
+  return new Response("OK");
+}
+
+const WELCOME_TEXT = `👋 <b>Привет! Я DNSChecon</b> — монитор распространения DNS.
+
+Когда ты меняешь DNS-запись, новые значения расходятся по планете постепенно — разные резолверы переключаются в разное время (от секунд до 48 часов). Я слежу за этим в реальном времени и сообщу, когда <b>все регионы сошлись</b>.
+
+<b>Как работает:</b>
+① Создаёшь watch — указываешь домен, тип записи и ожидаемое значение
+② Я опрашиваю резолверы по всему миру (US, EU, JP, BR, RU, AU + Cloudflare)
+③ Обновляю прогресс прямо в этом чате
+④ Присылаю уведомление, когда всё сошлось (или вышел таймаут)
+
+<b>Команды:</b>
+/start — это сообщение
+/help — подробная справка
+/status — открыть список watch'ей
+
+👇 Нажми кнопку, чтобы начать:`;
+
+const HELP_TEXT = `📖 <b>DNSChecon — справка</b>
+
+<b>Типы записей:</b> A, AAAA, CNAME, MX, TXT, NS
+
+<b>Резолверы (пресет global-8):</b>
+• 🇩🇪 Google EU/DE
+• 🇺🇸 Google US
+• 🇯🇵 Google JP
+• 🇧🇷 Google BR
+• 🇷🇺 Google RU
+• 🇦🇺 Google AU
+• 🌐 Cloudflare (глобальный)
+
+Geo-срез делается через <b>EDNS Client Subnet</b> — один провайдер, разные регионы, честная картина.
+
+<b>Режимы сходимости:</b>
+• <code>all</code> — ждём все резолверы
+• <code>quorum</code> — достаточно N из M
+
+<b>Backoff:</b> 30s → 30s → 60s → 60s → 2m → 5m → 10m → 30m → 1h → каждый час
+Таймаут по умолчанию — 48 часов.
+
+<b>Precheck authoritative:</b> перед стартом проверяет, что авторитарный NS уже отдаёт новое значение.`;
+
+async function tgCall(token: string, method: string, body: unknown): Promise<void> {
+  await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+interface TelegramUpdate {
+  update_id: number;
+  message?: {
+    message_id: number;
+    chat: { id: number; type: string };
+    from?: { id: number; first_name: string };
+    text?: string;
+  };
 }
 
 async function handleGithubWebhook(request: Request, env: Env): Promise<Response> {

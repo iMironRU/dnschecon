@@ -67,6 +67,7 @@ export interface Env {
   TELEGRAM_BOT_TOKEN: string;
   GITHUB_TOKEN: string;
   GITHUB_WEBHOOK_SECRET: string;
+  TELEGRAM_WEBHOOK_SECRET: string;
   GITHUB_OWNER: string;
   GITHUB_REPO: string;
   GITHUB_BRANCH: string;
