@@ -1,93 +1,616 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DNSChecon</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/miniapp/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DNSChecon</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg:     var(--tg-theme-bg-color,           #17212b);
+  --bg2:    var(--tg-theme-secondary-bg-color, #232e3c);
+  --text:   var(--tg-theme-text-color,         #f5f5f5);
+  --hint:   var(--tg-theme-hint-color,         #708499);
+  --accent: var(--tg-theme-button-color,       #5288c1);
+  --atext:  var(--tg-theme-button-text-color,  #ffffff);
+  --link:   var(--tg-theme-link-color,         #62a8d8);
+  --ok:     #4cd964;
+  --warn:   #ff9500;
+  --err:    #ff3b30;
+  --div:    rgba(255,255,255,0.07);
+  --r:      16px;
+  --r-sm:   10px;
+  --ease:   cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;font-size:16px;line-height:1.4}
+#app{position:relative;height:100vh;overflow:hidden}
+
+/* ── Pages ── */
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--bg);
+  transition:transform .3s var(--ease),opacity .3s var(--ease);will-change:transform}
+.page.active{transform:translateX(0);opacity:1;pointer-events:auto}
+.page.slide-right{transform:translateX(100%);opacity:1;pointer-events:none}
+.page.slide-left{transform:translateX(-28%);opacity:.5;pointer-events:none}
+
+/* ── Header ── */
+.hdr{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;
+  padding:12px 16px;background:var(--bg);border-bottom:.5px solid var(--div)}
+.hdr-titles{flex:1;min-width:0}
+.hdr-title{font-size:17px;font-weight:600;letter-spacing:-.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-sub{font-size:12px;color:var(--hint);margin-top:1px}
+.hdr-btn{width:34px;height:34px;border-radius:50%;background:var(--bg2);border:none;
+  color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:20px;line-height:1;flex-shrink:0;transition:opacity .15s}
+.hdr-btn:active{opacity:.6}
+
+/* ── Section label ── */
+.sec{font-size:12px;font-weight:500;color:var(--hint);text-transform:uppercase;
+  letter-spacing:.06em;padding:20px 16px 8px}
+
+/* ── Watch cards ── */
+.card-list{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.wcard{background:var(--bg2);border-radius:var(--r);padding:14px 16px;cursor:pointer;
+  border:.5px solid rgba(255,255,255,.06);transition:transform .12s,opacity .12s}
+.wcard:active{transform:scale(.98);opacity:.85}
+.wcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.wcard-domain{font-size:16px;font-weight:600;letter-spacing:-.3px;line-height:1.2}
+.wcard-meta{display:flex;align-items:center;gap:5px;flex-shrink:0;margin-top:2px}
+.pill{font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;letter-spacing:.02em;white-space:nowrap}
+.pill-type{background:rgba(255,255,255,.09);color:var(--hint)}
+.s-active {background:rgba(82,136,193,.18);color:#7bb8e8}
+.s-done   {background:rgba(76,217,100,.18);color:#4cd964}
+.s-timeout{background:rgba(255,149,0,.18);  color:#ff9500}
+.s-error  {background:rgba(255,59,48,.18);   color:#ff6b6b}
+.s-paused {background:rgba(255,255,255,.08); color:var(--hint)}
+.wcard-prog{display:flex;align-items:center;gap:8px}
+.prog-bg{flex:1;height:4px;background:rgba(255,255,255,.09);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .5s var(--ease)}
+.f-active {background:var(--accent)}
+.f-done   {background:var(--ok)}
+.f-timeout{background:var(--warn)}
+.f-error  {background:var(--err)}
+.prog-txt{font-size:12px;color:var(--hint);white-space:nowrap}
+.wcard-time{font-size:12px;color:var(--hint);margin-top:6px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Empty / skeleton ── */
+.empty{text-align:center;padding:64px 24px 32px}
+.empty-ico{font-size:52px;opacity:.5;margin-bottom:16px}
+.empty-title{font-size:18px;font-weight:600;margin-bottom:8px}
+.empty-sub{font-size:15px;color:var(--hint);line-height:1.5}
+.skel{border-radius:8px;background:linear-gradient(90deg,var(--bg2) 25%,rgba(255,255,255,.06) 50%,var(--bg2) 75%);
+  background-size:200% 100%;animation:shim 1.4s ease-in-out infinite}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Form ── */
+.f-body{padding:0 16px}
+.f-group{background:var(--bg2);border-radius:var(--r);overflow:hidden;margin-bottom:8px;
+  border:.5px solid rgba(255,255,255,.06)}
+.f-row{display:flex;align-items:center;padding:0 14px;min-height:52px;
+  border-bottom:.5px solid var(--div)}
+.f-row:last-child{border-bottom:none}
+.f-lbl{font-size:15px;color:var(--text);width:106px;flex-shrink:0}
+.f-inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:15px;
+  font-family:inherit;text-align:right;padding:14px 0}
+.f-inp::placeholder{color:var(--hint)}
+.f-sel{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:15px;
+  font-family:inherit;text-align:right;appearance:none;cursor:pointer;padding:14px 0}
+.f-sel option{background:var(--bg2);color:var(--text)}
+.f-ta{width:100%;background:none;border:none;outline:none;color:var(--text);font-size:15px;
+  font-family:inherit;resize:none;padding:14px;display:block}
+.f-ta::placeholder{color:var(--hint)}
+.f-hint{font-size:13px;color:var(--hint);padding:5px 4px 0;line-height:1.4}
+
+/* Segmented */
+.seg{display:flex;background:rgba(255,255,255,.06);border-radius:10px;padding:2px;gap:2px;margin-bottom:8px}
+.seg-btn{flex:1;padding:7px 2px;border:none;background:none;color:var(--hint);font-size:13px;
+  font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;font-family:inherit}
+.seg-btn.on{background:var(--bg2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+
+/* Toggle */
+.tog{position:relative;width:51px;height:31px;flex-shrink:0;margin-left:auto;cursor:pointer}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tog-track{position:absolute;inset:0;background:rgba(255,255,255,.13);border-radius:31px;transition:background .2s}
+.tog input:checked+.tog-track{background:var(--accent)}
+.tog-thumb{position:absolute;top:3px;left:3px;width:25px;height:25px;background:#fff;
+  border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,.3);transition:transform .2s;pointer-events:none}
+.tog input:checked~.tog-thumb{transform:translateX(20px)}
+
+/* Buttons */
+.btn-pri{width:100%;padding:15px;background:var(--accent);color:var(--atext);border:none;
+  border-radius:var(--r);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;
+  margin-top:10px;transition:opacity .15s,transform .1s;letter-spacing:-.2px}
+.btn-pri:active{transform:scale(.98);opacity:.85}
+.btn-pri:disabled{opacity:.4;cursor:not-allowed}
+.err-box{margin-top:10px;padding:12px 14px;background:rgba(255,59,48,.12);
+  border:.5px solid rgba(255,59,48,.3);border-radius:var(--r-sm);color:#ff6b6b;
+  font-size:14px;line-height:1.4}
+
+/* ── Detail hero ── */
+.det-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 16px 16px}
+.ring-wrap{position:relative;width:130px;height:130px;margin-bottom:14px}
+.ring-svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:9}
+.ring-fill{fill:none;stroke:var(--accent);stroke-width:9;stroke-linecap:round;
+  transition:stroke-dashoffset .6s var(--ease),stroke .3s}
+.ring-fill.r-done   {stroke:var(--ok)}
+.ring-fill.r-timeout{stroke:var(--warn)}
+.ring-fill.r-err    {stroke:var(--err)}
+.ring-lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-n{font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1}
+.ring-of{font-size:13px;color:var(--hint);margin-top:2px}
+.det-domain{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
+.det-exp{font-size:13px;color:var(--hint);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Stat row */
+.stat-row{display:flex;gap:8px;padding:0 16px 4px}
+.stat-box{flex:1;background:var(--bg2);border-radius:var(--r-sm);padding:10px 12px;
+  border:.5px solid var(--div)}
+.stat-lbl{font-size:11px;color:var(--hint);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.stat-val{font-size:15px;font-weight:600;letter-spacing:-.3px}
+
+/* Resolver list */
+.res-list{padding:0 16px;display:flex;flex-direction:column;gap:6px}
+.res-item{background:var(--bg2);border-radius:var(--r-sm);padding:11px 13px;
+  display:flex;align-items:center;gap:10px;border:.5px solid var(--div)}
+.res-flag{font-size:22px;flex-shrink:0;width:28px;text-align:center}
+.res-info{flex:1;min-width:0}
+.res-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-region{font-size:12px;color:var(--hint)}
+.res-vals{font-size:11px;color:var(--hint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.res-icon{font-size:20px;line-height:1}
+.res-ttl{font-size:11px;color:var(--hint)}
+
+/* Action bar */
+.act-bar{position:sticky;bottom:0;padding:10px 16px;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  background:var(--bg);border-top:.5px solid var(--div);display:flex;gap:8px}
+.btn-sec{flex:1;padding:13px;background:var(--bg2);color:var(--text);border:none;
+  border-radius:var(--r-sm);font-size:15px;font-weight:500;font-family:inherit;
+  cursor:pointer;transition:opacity .15s}
+.btn-sec:active{opacity:.65}
+.btn-del{flex:1;padding:13px;background:rgba(255,59,48,.12);color:#ff4d4d;border:none;
+  border-radius:var(--r-sm);font-size:15px;font-weight:500;font-family:inherit;
+  cursor:pointer;transition:opacity .15s}
+.btn-del:active{opacity:.65}
+.hidden{display:none!important}
+</style>
 </head>
 <body>
-  <div id="app">
-    <div id="screen-list" class="screen active">
-      <div class="header">
-        <h1>DNSChecon</h1>
-        <button id="btn-new" class="btn-primary">+ New Watch</button>
+<div id="app">
+
+<!-- ══ LIST ══════════════════════════════════════════════════════════════ -->
+<div id="p-list" class="page active">
+  <div style="min-height:100vh;padding-bottom:24px">
+    <div class="hdr">
+      <div class="hdr-titles">
+        <div class="hdr-title">DNSChecon</div>
+        <div class="hdr-sub">DNS propagation monitor</div>
       </div>
-      <div id="watches-list" class="watches-list">
-        <div class="loading">Loading…</div>
+      <button class="hdr-btn" id="btn-new" aria-label="New watch" title="New watch">+</button>
+    </div>
+    <div id="list-body"></div>
+  </div>
+</div>
+
+<!-- ══ CREATE ════════════════════════════════════════════════════════════ -->
+<div id="p-create" class="page slide-right">
+  <div style="padding-bottom:32px">
+    <div class="hdr">
+      <div class="hdr-titles">
+        <div class="hdr-title">New watch</div>
+        <div class="hdr-sub">Track DNS propagation</div>
       </div>
     </div>
 
-    <div id="screen-create" class="screen">
-      <div class="header">
-        <button id="btn-back-create" class="btn-back">← Back</button>
-        <h1>New Watch</h1>
+    <div class="sec">Domain &amp; notification</div>
+    <div class="f-body">
+      <div class="f-group">
+        <div class="f-row">
+          <span class="f-lbl">Domain</span>
+          <input class="f-inp" id="f-domain" type="text" placeholder="app.example.com"
+            autocomplete="off" autocapitalize="none" spellcheck="false">
+        </div>
+        <div class="f-row">
+          <span class="f-lbl">Chat ID</span>
+          <input class="f-inp" id="f-chatid" type="number" placeholder="123456789">
+        </div>
       </div>
-      <form id="form-create" class="form">
-        <div class="field">
-          <label>Domain</label>
-          <input type="text" id="f-domain" placeholder="app.example.com" required>
-        </div>
-        <div class="field">
-          <label>Record Type</label>
-          <select id="f-type">
-            <option value="A">A</option>
-            <option value="AAAA">AAAA</option>
-            <option value="CNAME">CNAME</option>
-            <option value="MX">MX</option>
-            <option value="TXT">TXT</option>
-            <option value="NS">NS</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Expected Values <span class="hint">(one per line)</span></label>
-          <textarea id="f-values" rows="3" placeholder="203.0.113.10&#10;203.0.113.11" required></textarea>
-        </div>
-        <div class="field">
-          <label>Match Mode</label>
-          <select id="f-match">
+    </div>
+
+    <div class="sec">Record type</div>
+    <div class="f-body">
+      <div class="seg" id="type-seg">
+        <button class="seg-btn on" data-v="A">A</button>
+        <button class="seg-btn" data-v="AAAA">AAAA</button>
+        <button class="seg-btn" data-v="CNAME">CNAME</button>
+        <button class="seg-btn" data-v="MX">MX</button>
+        <button class="seg-btn" data-v="TXT">TXT</button>
+        <button class="seg-btn" data-v="NS">NS</button>
+      </div>
+    </div>
+
+    <div class="sec">Expected values</div>
+    <div class="f-body">
+      <div class="f-group">
+        <textarea class="f-ta" id="f-values" rows="3"
+          placeholder="203.0.113.10&#10;203.0.113.11"></textarea>
+      </div>
+      <p class="f-hint">One value per line</p>
+    </div>
+
+    <div class="sec">Settings</div>
+    <div class="f-body">
+      <div class="f-group">
+        <div class="f-row">
+          <span class="f-lbl">Match</span>
+          <select class="f-sel" id="f-match">
             <option value="exact-set">Exact set</option>
             <option value="contains">Contains</option>
           </select>
         </div>
-        <div class="field">
-          <label>Resolver Preset</label>
-          <select id="f-preset">
-            <option value="preset:global-8">global-8 (6 regions)</option>
-            <option value="preset:quick-check">quick-check (US + CF)</option>
+        <div class="f-row">
+          <span class="f-lbl">Resolvers</span>
+          <select class="f-sel" id="f-preset">
+            <option value="preset:global-8">global-8 · 6 regions</option>
+            <option value="preset:quick-check">quick-check · 2</option>
           </select>
         </div>
-        <div class="field">
-          <label>Telegram Chat ID for notifications</label>
-          <input type="number" id="f-chatid" placeholder="123456789" required>
+        <div class="f-row">
+          <span class="f-lbl">Progress</span>
+          <select class="f-sel" id="f-progress">
+            <option value="edit-in-place">Update message</option>
+            <option value="every-round">Every round</option>
+            <option value="off">Off</option>
+          </select>
         </div>
-        <div class="field">
-          <label>
-            <input type="checkbox" id="f-precheck"> Precheck authoritative NS
+        <div class="f-row">
+          <span class="f-lbl">Precheck NS</span>
+          <label class="tog">
+            <input type="checkbox" id="f-precheck">
+            <span class="tog-track"></span>
+            <span class="tog-thumb"></span>
           </label>
         </div>
-        <div id="form-error" class="error hidden"></div>
-        <button type="submit" class="btn-primary">Start Watching</button>
-      </form>
-    </div>
-
-    <div id="screen-detail" class="screen">
-      <div class="header">
-        <button id="btn-back-detail" class="btn-back">← Back</button>
-        <h1 id="detail-title">Watch Detail</h1>
       </div>
-      <div id="detail-content" class="detail-content">
-        <div class="loading">Loading…</div>
-      </div>
-      <div class="detail-actions">
-        <button id="btn-pause" class="btn-secondary">Pause</button>
-        <button id="btn-resume" class="btn-secondary hidden">Resume</button>
-        <button id="btn-cancel" class="btn-danger">Cancel</button>
-      </div>
+      <div id="f-err" class="err-box hidden"></div>
+      <button class="btn-pri" id="btn-submit">Start watching</button>
     </div>
   </div>
+</div>
 
-  <script src="/miniapp/app.js"></script>
+<!-- ══ DETAIL ════════════════════════════════════════════════════════════ -->
+<div id="p-detail" class="page slide-right">
+  <div style="padding-bottom:90px">
+    <div class="hdr">
+      <div class="hdr-titles">
+        <div class="hdr-title" id="d-title">Watch</div>
+        <div class="hdr-sub"   id="d-sub"></div>
+      </div>
+      <span id="d-spill"></span>
+    </div>
+
+    <div class="det-hero">
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
+          <circle class="ring-bg"   cx="65" cy="65" r="56"/>
+          <circle class="ring-fill" cx="65" cy="65" r="56"
+            id="ring" stroke-dasharray="351.9" stroke-dashoffset="351.9"/>
+        </svg>
+        <div class="ring-lbl">
+          <div class="ring-n"  id="rn">—</div>
+          <div class="ring-of" id="rof"></div>
+        </div>
+      </div>
+      <div class="det-domain" id="d-domain"></div>
+      <div class="det-exp"    id="d-exp"></div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-lbl">Round</div>   <div class="stat-val" id="s-round">—</div></div>
+      <div class="stat-box"><div class="stat-lbl">Elapsed</div> <div class="stat-val" id="s-elap">—</div></div>
+      <div class="stat-box"><div class="stat-lbl">Timeout in</div><div class="stat-val" id="s-tout">—</div></div>
+    </div>
+
+    <div class="sec">Resolvers</div>
+    <div class="res-list" id="res-list"></div>
+  </div>
+
+  <div class="act-bar">
+    <button class="btn-sec" id="btn-pause">Pause</button>
+    <button class="btn-sec hidden" id="btn-resume">Resume</button>
+    <button class="btn-del" id="btn-cancel">Cancel</button>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+/* ── Navigation ───────────────────────────────────────── */
+const PAGES = { list:'p-list', create:'p-create', detail:'p-detail' };
+let stack = ['list'];
+let watchId = null, pollT = null;
+
+function nav(to) {
+  const fromEl = document.querySelector('.page.active');
+  const toEl   = document.getElementById(PAGES[to]);
+  if (!toEl || fromEl === toEl) return;
+  fromEl.classList.replace('active','slide-left');
+  toEl.classList.remove('slide-right','slide-left');
+  toEl.classList.add('active');
+  stack.push(to);
+  syncBack();
+  haptic('light');
+}
+
+function back() {
+  if (stack.length <= 1) return;
+  stack.pop();
+  const prev = stack[stack.length-1];
+  const fromEl = document.querySelector('.page.active');
+  const toEl   = document.getElementById(PAGES[prev]);
+  stopPoll();
+  fromEl.classList.replace('active','slide-right');
+  toEl.classList.remove('slide-left','slide-right');
+  toEl.classList.add('active');
+  syncBack();
+  if (prev === 'list') loadWatches();
+}
+
+function syncBack() {
+  if (!tg) return;
+  if (stack.length > 1) { tg.BackButton.show(); tg.BackButton.onClick(back); }
+  else tg.BackButton.hide();
+}
+
+function haptic(t) { tg?.HapticFeedback?.impactOccurred(t); }
+
+/* ── API ──────────────────────────────────────────────── */
+const idata = () => tg?.initData ?? '';
+async function api(path, opts={}) {
+  const r = await fetch(path,{...opts,headers:{'Content-Type':'application/json','X-Telegram-InitData':idata(),...(opts.headers||{})}});
+  return r.json();
+}
+
+/* ── Helpers ──────────────────────────────────────────── */
+const FLAGS = {'google-de':'🇩🇪','google-us':'🇺🇸','google-jp':'🇯🇵',
+  'google-br':'🇧🇷','google-ru':'🇷🇺','google-au':'🇦🇺','cloudflare':'☁️','quad9':'🔷'};
+const RLABEL = {'active':'Active','done':'Converged','timeout':'Timeout',
+  'error':'Error','paused':'Paused','unknown':'—'};
+const RCLS = {'active':'s-active','done':'s-done','timeout':'s-timeout',
+  'error':'s-error','paused':'s-paused','unknown':'s-paused'};
+const FCLS = {'active':'f-active','done':'f-done','timeout':'f-timeout','error':'f-error'};
+const RICON = {'match':'✅','mismatch':'🔄','error':'⚠️'};
+
+function dur(s) {
+  s = Math.round(s);
+  if (s < 60) return s+'s';
+  if (s < 3600) return Math.floor(s/60)+'m '+s%60+'s';
+  return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';
+}
+const pill = (st) =>
+  `<span class="pill ${RCLS[st]||''}">${RLABEL[st]||st}</span>`;
+
+/* ── List ─────────────────────────────────────────────── */
+async function loadWatches() {
+  const el = document.getElementById('list-body');
+  el.innerHTML = `
+    <div class="sec">Watches</div>
+    <div class="card-list">
+      ${[0,1].map(()=>`
+        <div class="wcard" style="pointer-events:none">
+          <div class="wcard-top">
+            <div class="skel" style="height:18px;width:55%;border-radius:6px"></div>
+            <div class="skel" style="height:20px;width:44px;border-radius:6px"></div>
+          </div>
+          <div class="wcard-prog">
+            <div class="prog-bg"><div class="skel" style="height:4px;width:65%"></div></div>
+            <div class="skel" style="height:13px;width:30px;border-radius:4px"></div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  try {
+    const d = await api('/api/watches');
+    if (!d.ok) throw new Error(d.error);
+    renderList(d.watches);
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">⚠️</div>
+      <div class="empty-title">Couldn't load</div>
+      <div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function renderList(ws) {
+  const el = document.getElementById('list-body');
+  if (!ws.length) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-ico">📡</div>
+      <div class="empty-title">No watches yet</div>
+      <div class="empty-sub">Tap <strong>+</strong> to start tracking<br>DNS propagation</div>
+    </div>`;
+    return;
+  }
+  const active = ws.filter(w => w.status==='active'||w.status==='paused');
+  const done   = ws.filter(w => w.status!=='active'&&w.status!=='paused');
+  let h = '';
+  if (active.length) h += `<div class="sec">Tracking</div><div class="card-list">${active.map(wcard).join('')}</div>`;
+  if (done.length)   h += `<div class="sec">Completed</div><div class="card-list">${done.map(wcard).join('')}</div>`;
+  h += '<div style="height:20px"></div>';
+  el.innerHTML = h;
+  el.querySelectorAll('.wcard').forEach(c => c.addEventListener('click', ()=>openDetail(c.dataset.id)));
+}
+
+function wcard(w) {
+  const pct = w.total>0 ? Math.round((w.matchCount||0)/w.total*100) : 0;
+  const fc  = FCLS[w.status]||'f-active';
+  const dc  = w.status==='done' ? 'var(--ok)' : w.status==='timeout' ? 'var(--warn)'
+            : w.status==='error' ? 'var(--err)' : 'var(--accent)';
+  return `
+    <div class="wcard" data-id="${w.id}">
+      <div class="wcard-top">
+        <div class="wcard-domain">${w.domain||w.id}</div>
+        <div class="wcard-meta">
+          <span class="pill pill-type">${w.type||''}</span>${pill(w.status)}
+        </div>
+      </div>
+      <div class="wcard-prog">
+        <div class="prog-bg"><div class="prog-fill ${fc}" style="width:${pct}%"></div></div>
+        <span class="prog-txt">${w.matchCount||0}/${w.total||0}</span>
+        <div class="dot ${w.status==='active'?'dot-pulse':''}" style="background:${dc}"></div>
+      </div>
+      ${w.startedAt ? `<div class="wcard-time">${dur((Date.now()-w.startedAt)/1000)} ago · round ${(w.roundNo||0)+1}</div>` : ''}
+    </div>`;
+}
+
+/* ── Create ───────────────────────────────────────────── */
+let selType = 'A';
+document.querySelectorAll('#type-seg .seg-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#type-seg .seg-btn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    selType = b.dataset.v;
+    tg?.HapticFeedback?.selectionChanged();
+  });
+});
+
+document.getElementById('btn-submit').addEventListener('click', async () => {
+  const domain = document.getElementById('f-domain').value.trim();
+  const chatId = parseInt(document.getElementById('f-chatid').value,10);
+  const vals   = document.getElementById('f-values').value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  const match  = document.getElementById('f-match').value;
+  const preset = document.getElementById('f-preset').value;
+  const prog   = document.getElementById('f-progress').value;
+  const pre    = document.getElementById('f-precheck').checked;
+  const errEl  = document.getElementById('f-err');
+  const btn    = document.getElementById('btn-submit');
+
+  errEl.classList.add('hidden');
+  if (!domain)     return (errEl.textContent='Enter a domain',errEl.classList.remove('hidden'));
+  if (!vals.length)return (errEl.textContent='Enter at least one expected value',errEl.classList.remove('hidden'));
+  if (!chatId)     return (errEl.textContent='Enter your Telegram Chat ID',errEl.classList.remove('hidden'));
+
+  const id = domain.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,28)+'-'+selType.toLowerCase();
+  btn.disabled=true; btn.textContent='Starting…';
+  haptic('medium');
+
+  try {
+    const d = await api('/api/watches',{ method:'POST', body:JSON.stringify({
+      id, domain, type:selType,
+      expected:{values:vals, match},
+      resolvers:preset,
+      convergence:{mode:'all',confirmations:1},
+      backoff:{schedule_sec:[30,30,60,60,120,300,600,1800,3600],hold_last:true,jitter_pct:10,timeout_sec:172800},
+      precheck_authoritative:pre,
+      notify:{telegram_chat_ids:[chatId],progress:prog},
+      status:'active'
+    })});
+    if (!d.ok) throw new Error(d.error||d.message||'Failed');
+    tg?.HapticFeedback?.notificationOccurred('success');
+    back();
+  } catch(e) {
+    errEl.textContent=e.message; errEl.classList.remove('hidden');
+    tg?.HapticFeedback?.notificationOccurred('error');
+  } finally { btn.disabled=false; btn.textContent='Start watching'; }
+});
+
+/* ── Detail ───────────────────────────────────────────── */
+async function openDetail(id) {
+  watchId = id;
+  ['d-title','d-domain'].forEach(i=>document.getElementById(i).textContent=id);
+  ['d-sub','d-exp','d-spill'].forEach(i=>document.getElementById(i).textContent='');
+  document.getElementById('res-list').innerHTML='';
+  document.getElementById('rn').textContent='—';
+  document.getElementById('rof').textContent='';
+  nav('detail');
+  await refreshDetail();
+  startPoll();
+}
+
+async function refreshDetail() {
+  if (!watchId) return;
+  try {
+    const d = await api(`/api/watches/${watchId}`);
+    if (!d.ok) return;
+    renderDetail(d.state);
+  } catch{}
+}
+
+const CIRC = 351.9; // 2π×56
+
+function renderDetail(s) {
+  const def = s.definition;
+  const match = s.perResolverState ? Object.values(s.perResolverState).filter(r=>r.result==='match').length : 0;
+  const total = s.resolvers?.length||0;
+  const pct   = total>0 ? match/total : 0;
+
+  document.getElementById('d-title').textContent  = def.domain;
+  document.getElementById('d-sub').textContent    = def.type+' record';
+  document.getElementById('d-domain').textContent = def.domain;
+  document.getElementById('d-exp').textContent    = def.expected?.values?.join(', ')||'';
+  document.getElementById('d-spill').innerHTML    = pill(s.status);
+  document.getElementById('rn').textContent       = match;
+  document.getElementById('rof').textContent      = '/ '+total;
+
+  const ring = document.getElementById('ring');
+  ring.style.strokeDashoffset = CIRC*(1-pct);
+  ring.className = 'ring-fill'+(s.status==='done'?' r-done':s.status==='timeout'?' r-timeout':s.status==='error'?' r-err':'');
+
+  const el = Math.round((Date.now()-s.startedAt)/1000);
+  const rem = Math.max(0, s.startedAt + def.backoff.timeout_sec*1000 - Date.now());
+  document.getElementById('s-round').textContent = (s.roundNo||0)+1;
+  document.getElementById('s-elap').textContent  = dur(el);
+  document.getElementById('s-tout').textContent  = s.status==='active' ? dur(rem/1000) : '—';
+
+  document.getElementById('res-list').innerHTML = (s.resolvers||[]).map(r=>{
+    const rs   = s.perResolverState?.[r.name];
+    const icon = rs ? (RICON[rs.result]||'⬜') : '⬜';
+    const ttl  = rs?.observedTtl!=null ? `TTL ${rs.observedTtl}s` : '';
+    const vals = rs?.observedValues?.slice(0,2).join(', ')||(!rs?'pending':'');
+    return `
+      <div class="res-item">
+        <div class="res-flag">${FLAGS[r.name]||'🌐'}</div>
+        <div class="res-info">
+          <div class="res-name">${r.name}</div>
+          <div class="res-region">${r.region}</div>
+          ${vals?`<div class="res-vals">${vals}</div>`:''}
+        </div>
+        <div class="res-right">
+          <div class="res-icon">${icon}</div>
+          <div class="res-ttl">${ttl}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const a=s.status==='active', p=s.status==='paused';
+  document.getElementById('btn-pause').classList.toggle('hidden',!a);
+  document.getElementById('btn-resume').classList.toggle('hidden',!p);
+  document.getElementById('btn-cancel').classList.toggle('hidden',!a&&!p);
+}
+
+function startPoll(){ stopPoll(); pollT=setInterval(refreshDetail,4000); }
+function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
+
+['pause','resume','cancel'].forEach(action=>{
+  document.getElementById('btn-'+action).addEventListener('click',async()=>{
+    if (action==='cancel'&&!confirm('Cancel this watch?')) return;
+    haptic('medium');
+    await api(`/api/watches/${watchId}/${action}`,{method:'POST'});
+    await refreshDetail();
+  });
+});
+
+/* ── Boot ─────────────────────────────────────────────── */
+document.getElementById('btn-new').addEventListener('click',()=>nav('create'));
+if (tg) tg.BackButton.onClick(back);
+loadWatches();
+</script>
 </body>
 </html>

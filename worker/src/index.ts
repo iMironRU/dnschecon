@@ -13,8 +13,8 @@ export default {
     const { pathname } = url;
     const method = request.method;
 
-    // Serve Mini App static assets
-    if (pathname === "/" || pathname.startsWith("/miniapp/")) {
+    // Serve Mini App static assets (everything except API and webhooks)
+    if (!pathname.startsWith("/api/") && !pathname.startsWith("/webhook/")) {
       return env.ASSETS.fetch(request);
     }
 
@@ -94,12 +94,12 @@ async function handleListWatches(env: Env): Promise<Response> {
         try {
           const stub = getDoStub(id, env);
           const resp = await stub.fetch(doUrl(id, "state"));
-          const data: { ok: boolean; state?: { definition: { domain: string; type: string }; status: string; roundNo: number; perResolverState: Record<string, { result: string }> } } = await resp.json();
+          const data: { ok: boolean; state?: { definition: { domain: string; type: string }; status: string; roundNo: number; startedAt: number; perResolverState: Record<string, { result: string }> } } = await resp.json();
           if (!data.ok || !data.state) return { id, status: "unknown" };
-          const { definition: def, status, roundNo, perResolverState } = data.state;
+          const { definition: def, status, roundNo, startedAt, perResolverState } = data.state;
           const matchCount = Object.values(perResolverState).filter((r) => r.result === "match").length;
           const total = Object.keys(perResolverState).length;
-          return { id, domain: def.domain, type: def.type, status, roundNo, matchCount, total };
+          return { id, domain: def.domain, type: def.type, status, roundNo, startedAt, matchCount, total };
         } catch {
           return { id, status: "unknown" };
         }

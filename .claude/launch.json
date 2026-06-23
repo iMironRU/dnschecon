@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "miniapp",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4242", "--directory", "miniapp"],
+      "port": 4242
+    }
+  ]
+}
