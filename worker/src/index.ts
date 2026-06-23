@@ -5,6 +5,7 @@ import { validateInitData } from "./telegram.js";
 import { verifyGithubWebhook } from "./auth.js";
 import { invalidateRegistryCache } from "./resolvers.js";
 import { checkCreateLimits, registerWatch, unregisterWatch } from "./limits.js";
+import { handleMessage, handleCallback, answerCbq } from "./bot.js";
 
 export { WatchDO };
 
@@ -219,49 +220,49 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
     return new Response("Bad Request", { status: 400 });
   }
 
+  // Callback query (inline keyboard button press)
+  if (update.callback_query) {
+    const cbq = update.callback_query;
+    const chatId = cbq.from.id;
+    const msgId = cbq.message?.message_id ?? 0;
+    const data = cbq.data ?? "";
+    await handleCallback(chatId, cbq.id, data, msgId, env);
+    return new Response("OK");
+  }
+
   const msg = update.message;
   if (!msg?.text) return new Response("OK");
 
   const chatId = msg.chat.id;
   const text = msg.text.trim();
+  const cmd = text.split("@")[0];
 
-  if (text.startsWith("/start")) {
+  if (cmd === "/start") {
     await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
       chat_id: chatId,
       parse_mode: "HTML",
       text: WELCOME_TEXT,
       reply_markup: {
-        inline_keyboard: [[
-          {
-            text: "🚀 Открыть DNSChecon",
-            web_app: { url: WORKER_URL },
-          },
-        ]],
+        inline_keyboard: [[{ text: "🚀 Открыть DNSChecon", web_app: { url: WORKER_URL } }]],
       },
     });
-  } else if (text.startsWith("/help")) {
+    return new Response("OK");
+  }
+
+  if (cmd === "/help") {
     await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
       chat_id: chatId,
       parse_mode: "HTML",
       text: HELP_TEXT,
       reply_markup: {
-        inline_keyboard: [[
-          { text: "📡 Открыть приложение", web_app: { url: WORKER_URL } },
-        ]],
+        inline_keyboard: [[{ text: "📡 Открыть приложение", web_app: { url: WORKER_URL } }]],
       },
     });
-  } else if (text.startsWith("/status")) {
-    await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
-      chat_id: chatId,
-      parse_mode: "HTML",
-      text: "📋 Используй приложение для просмотра активных watch'ей.",
-      reply_markup: {
-        inline_keyboard: [[
-          { text: "📡 Открыть DNSChecon", web_app: { url: WORKER_URL } },
-        ]],
-      },
-    });
+    return new Response("OK");
   }
+
+  // /watch, /list, /delete, /cancel + conversation continuations
+  await handleMessage(chatId, text, env);
 
   return new Response("OK");
 }
@@ -271,41 +272,37 @@ const WELCOME_TEXT = `👋 <b>Привет! Я DNSChecon</b> — монитор 
 Когда ты меняешь DNS-запись, новые значения расходятся по планете постепенно — разные резолверы переключаются в разное время (от секунд до 48 часов). Я слежу за этим в реальном времени и сообщу, когда <b>все регионы сошлись</b>.
 
 <b>Как работает:</b>
-① Создаёшь watch — указываешь домен, тип записи и ожидаемое значение
+① Указываешь домен, тип записи и ожидаемое значение
 ② Я опрашиваю резолверы по всему миру (US, EU, JP, BR, RU, AU + Cloudflare)
 ③ Обновляю прогресс прямо в этом чате
 ④ Присылаю уведомление, когда всё сошлось (или вышел таймаут)
 
 <b>Команды:</b>
-/start — это сообщение
+/watch — добавить мониторинг
+/list — список активных мониторингов
+/delete — удалить мониторинг
 /help — подробная справка
-/status — открыть список watch'ей
 
-👇 Нажми кнопку, чтобы начать:`;
+👇 Или открой приложение для полного интерфейса:`;
 
 const HELP_TEXT = `📖 <b>DNSChecon — справка</b>
 
+<b>Команды:</b>
+/watch — пошаговый диалог для добавления мониторинга
+/list — список ваших мониторингов со статусами
+/delete — удалить мониторинг (с выбором из списка)
+/cancel — отменить текущий диалог
+
 <b>Типы записей:</b> A, AAAA, CNAME, MX, TXT, NS
 
-<b>Резолверы (пресет global-8):</b>
-• 🇩🇪 Google EU/DE
-• 🇺🇸 Google US
-• 🇯🇵 Google JP
-• 🇧🇷 Google BR
-• 🇷🇺 Google RU
-• 🇦🇺 Google AU
-• 🌐 Cloudflare (глобальный)
+<b>Резолверы (global-8):</b>
+🇩🇪 EU/DE · 🇺🇸 US · 🇯🇵 JP · 🇧🇷 BR · 🇷🇺 RU · 🇦🇺 AU · 🌐 Cloudflare
 
-Geo-срез делается через <b>EDNS Client Subnet</b> — один провайдер, разные регионы, честная картина.
+Geo-срез через <b>EDNS Client Subnet</b> — разные регионы от одного провайдера.
 
-<b>Режимы сходимости:</b>
-• <code>all</code> — ждём все резолверы
-• <code>quorum</code> — достаточно N из M
+<b>Backoff:</b> 30с → 30с → 1м → 2м → 5м → 10м → 30м → 1ч (до 48 ч)
 
-<b>Backoff:</b> 30s → 30s → 60s → 60s → 2m → 5m → 10m → 30m → 1h → каждый час
-Таймаут по умолчанию — 48 часов.
-
-<b>Precheck authoritative:</b> перед стартом проверяет, что авторитарный NS уже отдаёт новое значение.`;
+<b>Лимиты:</b> до 10 мониторингов на пользователя.`;
 
 async function tgCall(token: string, method: string, body: unknown): Promise<void> {
   await fetch(`https://api.telegram.org/bot${token}/${method}`, {
@@ -322,6 +319,12 @@ interface TelegramUpdate {
     chat: { id: number; type: string };
     from?: { id: number; first_name: string };
     text?: string;
+  };
+  callback_query?: {
+    id: string;
+    from: { id: number };
+    message?: { message_id: number; chat: { id: number } };
+    data?: string;
   };
 }
 
