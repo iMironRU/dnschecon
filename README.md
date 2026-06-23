@@ -3,6 +3,9 @@
 **DNS propagation monitor** — watch your records converge across the globe in real time.
 
 [![Deploy](https://github.com/iMironRU/dnschecon/actions/workflows/deploy.yml/badge.svg)](https://github.com/iMironRU/dnschecon/actions/workflows/deploy.yml)
+[![Telegram Bot](https://img.shields.io/badge/Telegram-@dnschecon__bot-blue?logo=telegram)](https://t.me/dnschecon_bot)
+
+**[→ Открыть бота в Telegram](https://t.me/dnschecon_bot) · [→ Landing page](https://imironru.github.io/dnschecon/)**
 
 When you change a DNS record, resolvers across the world don't update at the same time — propagation can take anywhere from seconds to 48 hours. DNSChecon polls resolvers on every continent and notifies you via Telegram the moment all of them agree.
 
