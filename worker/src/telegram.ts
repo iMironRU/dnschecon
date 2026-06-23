@@ -45,16 +45,16 @@ export function buildProgressText(state: WatchState): string {
 
   const lines: string[] = [
     `📡 <b>DNSChecon</b> — <code>${def.domain}</code> (${def.type})`,
-    `⏱ Elapsed: ${elapsedStr} | Round: ${roundNo + 1}`,
+    `⏱ Прошло: ${elapsedStr} | Раунд: ${roundNo + 1}`,
     ``,
-    `Progress: ${matchCount}/${total} resolvers converged`,
+    `Прогресс: ${matchCount}/${total} резолверов совпадают`,
     ``,
   ];
 
   for (const resolver of state.resolvers) {
     const rs = perResolverState[resolver.name];
     if (!rs) {
-      lines.push(`⬜ ${resolver.name} (${resolver.region}) — pending`);
+      lines.push(`⬜ ${resolver.name} (${resolver.region}) — ожидание`);
       continue;
     }
     const icon = rs.result === "match" ? "✅" : rs.result === "mismatch" ? "🔄" : "⚠️";
@@ -64,11 +64,11 @@ export function buildProgressText(state: WatchState): string {
   }
 
   if (status === "done") {
-    lines.push(``, `🎉 <b>Converged!</b> All resolvers match after ${elapsedStr}`);
+    lines.push(``, `🎉 <b>Сошлось!</b> Все резолверы совпали через ${elapsedStr}`);
   } else if (status === "timeout") {
-    lines.push(``, `⏰ <b>Timed out</b> after ${elapsedStr}. ${matchCount}/${total} converged.`);
+    lines.push(``, `⏰ <b>Таймаут</b> через ${elapsedStr}. Совпало: ${matchCount}/${total}`);
   } else if (status === "error") {
-    lines.push(``, `❌ <b>Error</b> — check logs`);
+    lines.push(``, `❌ <b>Ошибка</b> — смотрите логи`);
   }
 
   return lines.join("\n");
@@ -80,22 +80,22 @@ export function buildFinalText(state: WatchState): string {
 
 export function buildPrecheckFailText(def: { domain: string; type: string }, message: string): string {
   return [
-    `⚠️ <b>DNSChecon precheck failed</b>`,
-    `Domain: <code>${def.domain}</code> (${def.type})`,
+    `⚠️ <b>DNSChecon: предпроверка не прошла</b>`,
+    `Домен: <code>${def.domain}</code> (${def.type})`,
     ``,
     message,
     ``,
-    `Watch not started. Fix the authoritative DNS and retry.`,
+    `Слежение не запущено. Исправьте DNS на авторитативном сервере и нажмите «Повторить».`,
   ].join("\n");
 }
 
 export function buildStartText(def: { domain: string; type: string; expected: { values: string[] } }): string {
   return [
-    `🚀 <b>DNSChecon started</b>`,
-    `Watching <code>${def.domain}</code> (${def.type})`,
-    `Expected: <code>${def.expected.values.join(", ")}</code>`,
+    `🚀 <b>DNSChecon запущен</b>`,
+    `Слежу за <code>${def.domain}</code> (${def.type})`,
+    `Ожидаемое: <code>${def.expected.values.join(", ")}</code>`,
     ``,
-    `First poll in ~30s…`,
+    `Первый опрос через ~30 сек…`,
   ].join("\n");
 }
 
@@ -139,9 +139,9 @@ export async function validateInitData(
 }
 
 function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  if (seconds < 60) return `${seconds} сек`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} мин ${seconds % 60} сек`;
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  return `${h}h ${m}m`;
+  return `${h} ч ${m} мин`;
 }
