@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+
+  <rect width="640" height="360" fill="#0f1923"/>
+
+  <!-- outer glow rings -->
+  <circle cx="158" cy="183" r="131" fill="none" stroke="#5288c1" stroke-width="1.5" opacity="0.13"/>
+  <circle cx="158" cy="183" r="105" fill="none" stroke="#5288c1" stroke-width="2"   opacity="0.22"/>
+
+  <!-- globe fill -->
+  <circle cx="158" cy="183" r="76" fill="#131f2b"/>
+  <circle cx="158" cy="183" r="76" fill="none" stroke="#ffffff" stroke-width="8" opacity="0.38"/>
+
+  <!-- equator -->
+  <line x1="82" y1="183" x2="234" y2="183" stroke="#ffffff" stroke-width="5" opacity="0.26"/>
+  <!-- upper latitude -->
+  <ellipse cx="158" cy="152" rx="64" ry="20" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.18"/>
+  <!-- lower latitude -->
+  <ellipse cx="158" cy="214" rx="64" ry="20" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.18"/>
+  <!-- meridian -->
+  <ellipse cx="158" cy="183" rx="34" ry="76" fill="none" stroke="#ffffff" stroke-width="5" opacity="0.22"/>
+
+  <!-- resolver lines to center -->
+  <line x1="120" y1="122" x2="158" y2="183" stroke="#7bb8e8" stroke-width="1.2" opacity="0.4"/>
+  <line x1="90"  y1="177" x2="158" y2="183" stroke="#7bb8e8" stroke-width="1.2" opacity="0.4"/>
+  <line x1="196" y1="146" x2="158" y2="183" stroke="#7bb8e8" stroke-width="1.2" opacity="0.4"/>
+  <line x1="183" y1="216" x2="158" y2="183" stroke="#7bb8e8" stroke-width="1.2" opacity="0.4"/>
+  <line x1="168" y1="112" x2="158" y2="183" stroke="#7bb8e8" stroke-width="1.2" opacity="0.4"/>
+  <line x1="151" y1="231" x2="158" y2="183" stroke="#7bb8e8" stroke-width="1.2" opacity="0.4"/>
+
+  <!-- resolver dots -->
+  <circle cx="120" cy="122" r="5.5" fill="#7bb8e8"/>
+  <circle cx="90"  cy="177" r="5.5" fill="#7bb8e8"/>
+  <circle cx="196" cy="146" r="5.5" fill="#7bb8e8"/>
+  <circle cx="183" cy="216" r="5.5" fill="#7bb8e8"/>
+  <circle cx="168" cy="112" r="5.5" fill="#7bb8e8"/>
+  <circle cx="151" cy="231" r="5.5" fill="#7bb8e8"/>
+  <!-- cloudflare center node -->
+  <circle cx="158" cy="183" r="8"   fill="#5288c1"/>
+  <circle cx="158" cy="183" r="4"   fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="292" y="96"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="52" font-weight="800" letter-spacing="-2">
+    <tspan fill="#7bb8e8">DNS</tspan><tspan fill="#ffffff">Checon</tspan>
+  </text>
+
+  <!-- subtitle -->
+  <text x="292" y="130"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="16" fill="#7bb8e8" letter-spacing="0.3">Монитор распространения DNS</text>
+
+  <!-- divider -->
+  <line x1="292" y1="154" x2="618" y2="154" stroke="#ffffff" stroke-width="0.7" opacity="0.13"/>
+
+  <!-- features -->
+  <circle cx="296" cy="185" r="4.5" fill="#5288c1"/>
+  <text x="311" y="190"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="15" fill="#c4d4e0">6 регионов: DE · US · JP · BR · RU · AU</text>
+
+  <circle cx="296" cy="219" r="4.5" fill="#5288c1"/>
+  <text x="311" y="224"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="15" fill="#c4d4e0">Умный backoff: 30 сек &#x2014; 1 час</text>
+
+  <circle cx="296" cy="253" r="4.5" fill="#4cd964"/>
+  <text x="311" y="258"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="15" fill="#c4d4e0">Уведомление при сходимости</text>
+
+  <circle cx="296" cy="287" r="4.5" fill="#4cd964"/>
+  <text x="311" y="292"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="15" fill="#c4d4e0">Live-прогресс в Telegram</text>
+
+  <!-- username -->
+  <text x="292" y="335"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="13" fill="#445870">@dnschecon_bot</text>
+
+</svg>
