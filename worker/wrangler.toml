@@ -10,7 +10,7 @@ bindings = [
 
 [[migrations]]
 tag = "v1"
-new_classes = ["WatchDO"]
+new_sqlite_classes = ["WatchDO"]
 
 [[kv_namespaces]]
 binding = "DNSCHECON_KV"
