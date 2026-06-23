@@ -222,10 +222,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
           <input class="f-inp" id="f-domain" type="text" placeholder="app.example.com"
             autocomplete="off" autocapitalize="none" spellcheck="false">
         </div>
-        <div class="f-row">
-          <span class="f-lbl" data-i18n="lblChatId"></span>
-          <input class="f-inp" id="f-chatid" type="number" placeholder="123456789">
-        </div>
       </div>
     </div>
 
@@ -347,9 +343,8 @@ const STRINGS = {
     btnNewLabel: 'Новый watch',
     createTitle: 'Новый watch',
     createSub:   'Отслеживание DNS',
-    secDomain:   'Домен и уведомление',
+    secDomain:   'Домен',
     lblDomain:   'Домен',
-    lblChatId:   'Chat ID',
     secType:     'Тип записи',
     secExpected: 'Ожидаемые значения',
     hintValues:  'Одно значение на строку',
@@ -381,7 +376,6 @@ const STRINGS = {
     submitting:  'Запуск…',
     errDomain:   'Введите домен',
     errValues:   'Введите хотя бы одно ожидаемое значение',
-    errChatId:   'Введите Telegram Chat ID',
     errFailed:   'Ошибка',
     recordLabel: 'запись',
     pending:     'ожидание',
@@ -398,9 +392,8 @@ const STRINGS = {
     btnNewLabel: 'New watch',
     createTitle: 'New watch',
     createSub:   'Track DNS propagation',
-    secDomain:   'Domain & notification',
+    secDomain:   'Domain',
     lblDomain:   'Domain',
-    lblChatId:   'Chat ID',
     secType:     'Record type',
     secExpected: 'Expected values',
     hintValues:  'One value per line',
@@ -432,7 +425,6 @@ const STRINGS = {
     submitting:  'Starting…',
     errDomain:   'Enter a domain',
     errValues:   'Enter at least one expected value',
-    errChatId:   'Enter your Telegram Chat ID',
     errFailed:   'Failed',
     recordLabel: 'record',
     pending:     'pending',
@@ -627,7 +619,7 @@ document.querySelectorAll('#type-seg .seg-btn').forEach(b => {
 
 document.getElementById('btn-submit').addEventListener('click', async () => {
   const domain = document.getElementById('f-domain').value.trim();
-  const chatId = parseInt(document.getElementById('f-chatid').value,10);
+  const chatId = tg?.initDataUnsafe?.user?.id;
   const vals   = document.getElementById('f-values').value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
   const match  = document.getElementById('f-match').value;
   const preset = document.getElementById('f-preset').value;
@@ -639,7 +631,6 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   errEl.classList.add('hidden');
   if (!domain)     return (errEl.textContent=t('errDomain'),errEl.classList.remove('hidden'));
   if (!vals.length)return (errEl.textContent=t('errValues'),errEl.classList.remove('hidden'));
-  if (!chatId)     return (errEl.textContent=t('errChatId'),errEl.classList.remove('hidden'));
 
   const id = domain.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,28)+'-'+selType.toLowerCase();
   btn.disabled=true; btn.textContent=t('submitting');
