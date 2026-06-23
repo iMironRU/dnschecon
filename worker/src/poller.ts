@@ -129,46 +129,16 @@ async function queryDoh(
 export async function precheckAuthoritative(
   def: WatchDefinition
 ): Promise<{ ok: boolean; message: string }> {
-  // Query NS for the zone, then query the authoritative server directly via DoH
-  // Use Google DoH to find NS records first
   const domain = toAsciiDomain(def.domain);
-  const nsUrl = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=NS`;
-  let nsResp: Response;
-  try {
-    nsResp = await fetch(nsUrl, { headers: { Accept: "application/dns-json" } });
-  } catch (e) {
-    return { ok: false, message: `Cannot fetch NS records: ${e}` };
-  }
 
-  if (!nsResp.ok) {
-    return { ok: false, message: `NS lookup HTTP ${nsResp.status}` };
-  }
-
-  const nsJson: DohJsonResponse = await nsResp.json();
-  const nsAnswers = nsJson.Answer ?? nsJson.Authority ?? [];
-  const nsHosts = nsAnswers
-    .filter((a) => a.type === 2)
-    .map((a) => a.data.toLowerCase().replace(/\.?$/, "."));
-
+  // Walk up labels to find NS records for the containing zone
+  const nsHosts = await findZoneNs(domain);
   if (nsHosts.length === 0) {
     return { ok: false, message: "No NS records found for zone" };
   }
-
-  // Query one authoritative NS directly
   const nsHost = nsHosts[0];
-  // Get the IP of that NS
-  const nsIpUrl = `https://dns.google/resolve?name=${encodeURIComponent(nsHost)}&type=A`;
-  const nsIpResp = await fetch(nsIpUrl, { headers: { Accept: "application/dns-json" } });
-  if (!nsIpResp.ok) {
-    return { ok: false, message: `Cannot resolve NS IP: ${nsHost}` };
-  }
-  const nsIpJson: DohJsonResponse = await nsIpResp.json();
-  const nsIp = (nsIpJson.Answer ?? []).find((a) => a.type === 1)?.data;
-  if (!nsIp) {
-    return { ok: false, message: `Cannot resolve NS IP: ${nsHost}` };
-  }
 
-  // Query authoritative via Google DoH with cd=1 (don't validate DNSSEC) to bypass cache
+  // Query via Google DoH with cd=1 to bypass DNSSEC caching for freshness
   const authUrl = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${def.type}&cd=1`;
   const authResp = await fetch(authUrl, { headers: { Accept: "application/dns-json" } });
   if (!authResp.ok) {
@@ -184,8 +154,33 @@ export async function precheckAuthoritative(
     ok,
     message: ok
       ? `Authoritative ${nsHost} already returns expected values`
-      : `Authoritative ${nsHost} still returns old values: ${observed.join(", ")}`,
+      : `Authoritative ${nsHost} still returns old values: ${observed.join(", ") || "(none)"}`,
   };
+}
+
+async function findZoneNs(domain: string): Promise<string[]> {
+  let zone = domain;
+  while (true) {
+    const url = `https://dns.google/resolve?name=${encodeURIComponent(zone)}&type=NS`;
+    try {
+      const resp = await fetch(url, { headers: { Accept: "application/dns-json" } });
+      if (resp.ok) {
+        const json: DohJsonResponse = await resp.json();
+        const hosts = (json.Answer ?? [])
+          .filter((a) => a.type === 2)
+          .map((a) => a.data.toLowerCase().replace(/\.?$/, "."));
+        if (hosts.length > 0) return hosts;
+      }
+    } catch {
+      // continue walking up
+    }
+    const dot = zone.indexOf(".");
+    if (dot === -1) break;
+    const parent = zone.slice(dot + 1);
+    if (!parent.includes(".")) break; // reached TLD, stop
+    zone = parent;
+  }
+  return [];
 }
 
 function toAsciiDomain(domain: string): string {
