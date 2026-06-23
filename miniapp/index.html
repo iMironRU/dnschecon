@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -44,6 +44,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;
   font-size:20px;line-height:1;flex-shrink:0;transition:opacity .15s}
 .hdr-btn:active{opacity:.6}
+.lang-btn{padding:0 10px;height:28px;background:var(--bg2);
+  border:.5px solid rgba(255,255,255,.15);border-radius:14px;color:var(--hint);
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.04em;
+  flex-shrink:0;transition:color .15s,border-color .15s}
+.lang-btn:active{opacity:.6}
 
 /* ── Section label ── */
 .sec{font-size:12px;font-weight:500;color:var(--hint);text-transform:uppercase;
@@ -190,9 +195,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
     <div class="hdr">
       <div class="hdr-titles">
         <div class="hdr-title">DNSChecon</div>
-        <div class="hdr-sub">DNS propagation monitor</div>
+        <div class="hdr-sub" data-i18n="subtitle"></div>
       </div>
-      <button class="hdr-btn" id="btn-new" aria-label="New watch" title="New watch">+</button>
+      <button class="lang-btn" id="btn-lang">EN</button>
+      <button class="hdr-btn" id="btn-new" data-i18n-aria="btnNewLabel">+</button>
     </div>
     <div id="list-body"></div>
   </div>
@@ -203,27 +209,27 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   <div style="padding-bottom:32px">
     <div class="hdr">
       <div class="hdr-titles">
-        <div class="hdr-title">New watch</div>
-        <div class="hdr-sub">Track DNS propagation</div>
+        <div class="hdr-title" data-i18n="createTitle"></div>
+        <div class="hdr-sub"   data-i18n="createSub"></div>
       </div>
     </div>
 
-    <div class="sec">Domain &amp; notification</div>
+    <div class="sec" data-i18n="secDomain"></div>
     <div class="f-body">
       <div class="f-group">
         <div class="f-row">
-          <span class="f-lbl">Domain</span>
+          <span class="f-lbl" data-i18n="lblDomain"></span>
           <input class="f-inp" id="f-domain" type="text" placeholder="app.example.com"
             autocomplete="off" autocapitalize="none" spellcheck="false">
         </div>
         <div class="f-row">
-          <span class="f-lbl">Chat ID</span>
+          <span class="f-lbl" data-i18n="lblChatId"></span>
           <input class="f-inp" id="f-chatid" type="number" placeholder="123456789">
         </div>
       </div>
     </div>
 
-    <div class="sec">Record type</div>
+    <div class="sec" data-i18n="secType"></div>
     <div class="f-body">
       <div class="seg" id="type-seg">
         <button class="seg-btn on" data-v="A">A</button>
@@ -235,42 +241,42 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
       </div>
     </div>
 
-    <div class="sec">Expected values</div>
+    <div class="sec" data-i18n="secExpected"></div>
     <div class="f-body">
       <div class="f-group">
         <textarea class="f-ta" id="f-values" rows="3"
           placeholder="203.0.113.10&#10;203.0.113.11"></textarea>
       </div>
-      <p class="f-hint">One value per line</p>
+      <p class="f-hint" data-i18n="hintValues"></p>
     </div>
 
-    <div class="sec">Settings</div>
+    <div class="sec" data-i18n="secSettings"></div>
     <div class="f-body">
       <div class="f-group">
         <div class="f-row">
-          <span class="f-lbl">Match</span>
+          <span class="f-lbl" data-i18n="lblMatch"></span>
           <select class="f-sel" id="f-match">
-            <option value="exact-set">Exact set</option>
-            <option value="contains">Contains</option>
+            <option value="exact-set"></option>
+            <option value="contains"></option>
           </select>
         </div>
         <div class="f-row">
-          <span class="f-lbl">Resolvers</span>
+          <span class="f-lbl" data-i18n="lblResolvers"></span>
           <select class="f-sel" id="f-preset">
             <option value="preset:global-8">global-8 · 6 regions</option>
             <option value="preset:quick-check">quick-check · 2</option>
           </select>
         </div>
         <div class="f-row">
-          <span class="f-lbl">Progress</span>
+          <span class="f-lbl" data-i18n="lblProgress"></span>
           <select class="f-sel" id="f-progress">
-            <option value="edit-in-place">Update message</option>
-            <option value="every-round">Every round</option>
-            <option value="off">Off</option>
+            <option value="edit-in-place"></option>
+            <option value="every-round"></option>
+            <option value="off"></option>
           </select>
         </div>
         <div class="f-row">
-          <span class="f-lbl">Precheck NS</span>
+          <span class="f-lbl" data-i18n="lblPrecheck"></span>
           <label class="tog">
             <input type="checkbox" id="f-precheck">
             <span class="tog-track"></span>
@@ -279,7 +285,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
         </div>
       </div>
       <div id="f-err" class="err-box hidden"></div>
-      <button class="btn-pri" id="btn-submit">Start watching</button>
+      <button class="btn-pri" id="btn-submit" data-i18n="btnSubmit"></button>
     </div>
   </div>
 </div>
@@ -312,19 +318,19 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
     </div>
 
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-lbl">Round</div>   <div class="stat-val" id="s-round">—</div></div>
-      <div class="stat-box"><div class="stat-lbl">Elapsed</div> <div class="stat-val" id="s-elap">—</div></div>
-      <div class="stat-box"><div class="stat-lbl">Timeout in</div><div class="stat-val" id="s-tout">—</div></div>
+      <div class="stat-box"><div class="stat-lbl" data-i18n="lblRound"></div>   <div class="stat-val" id="s-round">—</div></div>
+      <div class="stat-box"><div class="stat-lbl" data-i18n="lblElapsed"></div> <div class="stat-val" id="s-elap">—</div></div>
+      <div class="stat-box"><div class="stat-lbl" data-i18n="lblTimeout"></div> <div class="stat-val" id="s-tout">—</div></div>
     </div>
 
-    <div class="sec">Resolvers</div>
+    <div class="sec" data-i18n="secResolvers"></div>
     <div class="res-list" id="res-list"></div>
   </div>
 
   <div class="act-bar">
-    <button class="btn-sec" id="btn-pause">Pause</button>
-    <button class="btn-sec hidden" id="btn-resume">Resume</button>
-    <button class="btn-del" id="btn-cancel">Cancel</button>
+    <button class="btn-sec" id="btn-pause"            data-i18n="btnPause"></button>
+    <button class="btn-sec hidden" id="btn-resume"    data-i18n="btnResume"></button>
+    <button class="btn-del" id="btn-cancel"           data-i18n="btnCancel"></button>
   </div>
 </div>
 
@@ -333,6 +339,142 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 <script>
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
+
+/* ── i18n ─────────────────────────────────────────────── */
+const STRINGS = {
+  ru: {
+    subtitle:    'Монитор распространения DNS',
+    btnNewLabel: 'Новый watch',
+    createTitle: 'Новый watch',
+    createSub:   'Отслеживание DNS',
+    secDomain:   'Домен и уведомление',
+    lblDomain:   'Домен',
+    lblChatId:   'Chat ID',
+    secType:     'Тип записи',
+    secExpected: 'Ожидаемые значения',
+    hintValues:  'Одно значение на строку',
+    secSettings: 'Настройки',
+    lblMatch:    'Совпадение',
+    optExact:    'Точный набор',
+    optContains: 'Содержит',
+    lblResolvers:'Резолверы',
+    lblProgress: 'Прогресс',
+    optUpdateMsg:'Обновлять сообщение',
+    optEveryRound:'Каждый раунд',
+    optOff:      'Выкл',
+    lblPrecheck: 'Precheck NS',
+    btnSubmit:   'Начать слежение',
+    lblRound:    'Раунд',
+    lblElapsed:  'Прошло',
+    lblTimeout:  'Таймаут',
+    secResolvers:'Резолверы',
+    btnPause:    'Пауза',
+    btnResume:   'Продолжить',
+    btnCancel:   'Отмена',
+    secTracking: 'Активные',
+    secCompleted:'Завершённые',
+    secWatches:  'Watches',
+    emptyTitle:  'Нет отслеживаний',
+    emptySub:    'Нажми <strong>+</strong>, чтобы начать<br>отслеживание DNS',
+    errLoad:     'Не удалось загрузить',
+    timeAgo:     'назад · раунд',
+    submitting:  'Запуск…',
+    errDomain:   'Введите домен',
+    errValues:   'Введите хотя бы одно ожидаемое значение',
+    errChatId:   'Введите Telegram Chat ID',
+    errFailed:   'Ошибка',
+    recordLabel: 'запись',
+    pending:     'ожидание',
+    confirmCancel:'Отменить этот watch?',
+    sActive:     'Активный',
+    sDone:       'Сошлось',
+    sTimeout:    'Таймаут',
+    sError:      'Ошибка',
+    sPaused:     'Пауза',
+    sUnknown:    '—',
+  },
+  en: {
+    subtitle:    'DNS propagation monitor',
+    btnNewLabel: 'New watch',
+    createTitle: 'New watch',
+    createSub:   'Track DNS propagation',
+    secDomain:   'Domain & notification',
+    lblDomain:   'Domain',
+    lblChatId:   'Chat ID',
+    secType:     'Record type',
+    secExpected: 'Expected values',
+    hintValues:  'One value per line',
+    secSettings: 'Settings',
+    lblMatch:    'Match',
+    optExact:    'Exact set',
+    optContains: 'Contains',
+    lblResolvers:'Resolvers',
+    lblProgress: 'Progress',
+    optUpdateMsg:'Update message',
+    optEveryRound:'Every round',
+    optOff:      'Off',
+    lblPrecheck: 'Precheck NS',
+    btnSubmit:   'Start watching',
+    lblRound:    'Round',
+    lblElapsed:  'Elapsed',
+    lblTimeout:  'Timeout in',
+    secResolvers:'Resolvers',
+    btnPause:    'Pause',
+    btnResume:   'Resume',
+    btnCancel:   'Cancel',
+    secTracking: 'Tracking',
+    secCompleted:'Completed',
+    secWatches:  'Watches',
+    emptyTitle:  'No watches yet',
+    emptySub:    'Tap <strong>+</strong> to start tracking<br>DNS propagation',
+    errLoad:     "Couldn't load",
+    timeAgo:     'ago · round',
+    submitting:  'Starting…',
+    errDomain:   'Enter a domain',
+    errValues:   'Enter at least one expected value',
+    errChatId:   'Enter your Telegram Chat ID',
+    errFailed:   'Failed',
+    recordLabel: 'record',
+    pending:     'pending',
+    confirmCancel:'Cancel this watch?',
+    sActive:     'Active',
+    sDone:       'Converged',
+    sTimeout:    'Timeout',
+    sError:      'Error',
+    sPaused:     'Paused',
+    sUnknown:    '—',
+  }
+};
+
+let lang = localStorage.getItem('lang') || 'ru';
+const t = key => STRINGS[lang][key] ?? key;
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.getElementById('btn-lang').textContent = lang === 'ru' ? 'EN' : 'RU';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    const v = t(el.dataset.i18nAria);
+    el.setAttribute('aria-label', v);
+    el.setAttribute('title', v);
+  });
+  // Select options — preserve current selection
+  const matchSel = document.getElementById('f-match');
+  const matchVal = matchSel.value;
+  matchSel.innerHTML = `<option value="exact-set">${t('optExact')}</option><option value="contains">${t('optContains')}</option>`;
+  matchSel.value = matchVal;
+  const progSel = document.getElementById('f-progress');
+  const progVal = progSel.value;
+  progSel.innerHTML = `<option value="edit-in-place">${t('optUpdateMsg')}</option><option value="every-round">${t('optEveryRound')}</option><option value="off">${t('optOff')}</option>`;
+  progSel.value = progVal;
+  // btn-submit only when not mid-submit
+  const sub = document.getElementById('btn-submit');
+  if (!sub.disabled) sub.textContent = t('btnSubmit');
+  // Re-render list if on list page
+  if (stack[stack.length - 1] === 'list') loadWatches();
+}
 
 /* ── Navigation ───────────────────────────────────────── */
 const PAGES = { list:'p-list', create:'p-create', detail:'p-detail' };
@@ -383,12 +525,16 @@ async function api(path, opts={}) {
 /* ── Helpers ──────────────────────────────────────────── */
 const FLAGS = {'google-de':'🇩🇪','google-us':'🇺🇸','google-jp':'🇯🇵',
   'google-br':'🇧🇷','google-ru':'🇷🇺','google-au':'🇦🇺','cloudflare':'☁️','quad9':'🔷'};
-const RLABEL = {'active':'Active','done':'Converged','timeout':'Timeout',
-  'error':'Error','paused':'Paused','unknown':'—'};
 const RCLS = {'active':'s-active','done':'s-done','timeout':'s-timeout',
   'error':'s-error','paused':'s-paused','unknown':'s-paused'};
 const FCLS = {'active':'f-active','done':'f-done','timeout':'f-timeout','error':'f-error'};
 const RICON = {'match':'✅','mismatch':'🔄','error':'⚠️'};
+
+const statusLabel = st => {
+  const map = {active:'sActive',done:'sDone',timeout:'sTimeout',error:'sError',paused:'sPaused',unknown:'sUnknown'};
+  return t(map[st] || 'sUnknown');
+};
+const pill = (st) => `<span class="pill ${RCLS[st]||''}">${statusLabel(st)}</span>`;
 
 function dur(s) {
   s = Math.round(s);
@@ -396,14 +542,12 @@ function dur(s) {
   if (s < 3600) return Math.floor(s/60)+'m '+s%60+'s';
   return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';
 }
-const pill = (st) =>
-  `<span class="pill ${RCLS[st]||''}">${RLABEL[st]||st}</span>`;
 
 /* ── List ─────────────────────────────────────────────── */
 async function loadWatches() {
   const el = document.getElementById('list-body');
   el.innerHTML = `
-    <div class="sec">Watches</div>
+    <div class="sec">${t('secWatches')}</div>
     <div class="card-list">
       ${[0,1].map(()=>`
         <div class="wcard" style="pointer-events:none">
@@ -423,7 +567,7 @@ async function loadWatches() {
     renderList(d.watches);
   } catch(e) {
     el.innerHTML = `<div class="empty"><div class="empty-ico">⚠️</div>
-      <div class="empty-title">Couldn't load</div>
+      <div class="empty-title">${t('errLoad')}</div>
       <div class="empty-sub">${e.message}</div></div>`;
   }
 }
@@ -433,16 +577,16 @@ function renderList(ws) {
   if (!ws.length) {
     el.innerHTML = `<div class="empty">
       <div class="empty-ico">📡</div>
-      <div class="empty-title">No watches yet</div>
-      <div class="empty-sub">Tap <strong>+</strong> to start tracking<br>DNS propagation</div>
+      <div class="empty-title">${t('emptyTitle')}</div>
+      <div class="empty-sub">${t('emptySub')}</div>
     </div>`;
     return;
   }
   const active = ws.filter(w => w.status==='active'||w.status==='paused');
   const done   = ws.filter(w => w.status!=='active'&&w.status!=='paused');
   let h = '';
-  if (active.length) h += `<div class="sec">Tracking</div><div class="card-list">${active.map(wcard).join('')}</div>`;
-  if (done.length)   h += `<div class="sec">Completed</div><div class="card-list">${done.map(wcard).join('')}</div>`;
+  if (active.length) h += `<div class="sec">${t('secTracking')}</div><div class="card-list">${active.map(wcard).join('')}</div>`;
+  if (done.length)   h += `<div class="sec">${t('secCompleted')}</div><div class="card-list">${done.map(wcard).join('')}</div>`;
   h += '<div style="height:20px"></div>';
   el.innerHTML = h;
   el.querySelectorAll('.wcard').forEach(c => c.addEventListener('click', ()=>openDetail(c.dataset.id)));
@@ -466,7 +610,7 @@ function wcard(w) {
         <span class="prog-txt">${w.matchCount||0}/${w.total||0}</span>
         <div class="dot ${w.status==='active'?'dot-pulse':''}" style="background:${dc}"></div>
       </div>
-      ${w.startedAt ? `<div class="wcard-time">${dur((Date.now()-w.startedAt)/1000)} ago · round ${(w.roundNo||0)+1}</div>` : ''}
+      ${w.startedAt ? `<div class="wcard-time">${dur((Date.now()-w.startedAt)/1000)} ${t('timeAgo')} ${(w.roundNo||0)+1}</div>` : ''}
     </div>`;
 }
 
@@ -493,12 +637,12 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
   const btn    = document.getElementById('btn-submit');
 
   errEl.classList.add('hidden');
-  if (!domain)     return (errEl.textContent='Enter a domain',errEl.classList.remove('hidden'));
-  if (!vals.length)return (errEl.textContent='Enter at least one expected value',errEl.classList.remove('hidden'));
-  if (!chatId)     return (errEl.textContent='Enter your Telegram Chat ID',errEl.classList.remove('hidden'));
+  if (!domain)     return (errEl.textContent=t('errDomain'),errEl.classList.remove('hidden'));
+  if (!vals.length)return (errEl.textContent=t('errValues'),errEl.classList.remove('hidden'));
+  if (!chatId)     return (errEl.textContent=t('errChatId'),errEl.classList.remove('hidden'));
 
   const id = domain.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,28)+'-'+selType.toLowerCase();
-  btn.disabled=true; btn.textContent='Starting…';
+  btn.disabled=true; btn.textContent=t('submitting');
   haptic('medium');
 
   try {
@@ -512,13 +656,13 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       notify:{telegram_chat_ids:[chatId],progress:prog},
       status:'active'
     })});
-    if (!d.ok) throw new Error(d.error||d.message||'Failed');
+    if (!d.ok) throw new Error(d.error||d.message||t('errFailed'));
     tg?.HapticFeedback?.notificationOccurred('success');
     back();
   } catch(e) {
     errEl.textContent=e.message; errEl.classList.remove('hidden');
     tg?.HapticFeedback?.notificationOccurred('error');
-  } finally { btn.disabled=false; btn.textContent='Start watching'; }
+  } finally { btn.disabled=false; btn.textContent=t('btnSubmit'); }
 });
 
 /* ── Detail ───────────────────────────────────────────── */
@@ -552,7 +696,7 @@ function renderDetail(s) {
   const pct   = total>0 ? match/total : 0;
 
   document.getElementById('d-title').textContent  = def.domain;
-  document.getElementById('d-sub').textContent    = def.type+' record';
+  document.getElementById('d-sub').textContent    = def.type + ' ' + t('recordLabel');
   document.getElementById('d-domain').textContent = def.domain;
   document.getElementById('d-exp').textContent    = def.expected?.values?.join(', ')||'';
   document.getElementById('d-spill').innerHTML    = pill(s.status);
@@ -573,7 +717,7 @@ function renderDetail(s) {
     const rs   = s.perResolverState?.[r.name];
     const icon = rs ? (RICON[rs.result]||'⬜') : '⬜';
     const ttl  = rs?.observedTtl!=null ? `TTL ${rs.observedTtl}s` : '';
-    const vals = rs?.observedValues?.slice(0,2).join(', ')||(!rs?'pending':'');
+    const vals = rs?.observedValues?.slice(0,2).join(', ')||(!rs?t('pending'):'');
     return `
       <div class="res-item">
         <div class="res-flag">${FLAGS[r.name]||'🌐'}</div>
@@ -600,7 +744,7 @@ function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
 
 ['pause','resume','cancel'].forEach(action=>{
   document.getElementById('btn-'+action).addEventListener('click',async()=>{
-    if (action==='cancel'&&!confirm('Cancel this watch?')) return;
+    if (action==='cancel'&&!confirm(t('confirmCancel'))) return;
     haptic('medium');
     await api(`/api/watches/${watchId}/${action}`,{method:'POST'});
     await refreshDetail();
@@ -608,8 +752,15 @@ function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
 });
 
 /* ── Boot ─────────────────────────────────────────────── */
+document.getElementById('btn-lang').addEventListener('click', () => {
+  lang = lang === 'ru' ? 'en' : 'ru';
+  localStorage.setItem('lang', lang);
+  haptic('light');
+  applyLang();
+});
 document.getElementById('btn-new').addEventListener('click',()=>nav('create'));
 if (tg) tg.BackButton.onClick(back);
+applyLang();
 loadWatches();
 </script>
 </body>
