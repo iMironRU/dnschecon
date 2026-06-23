@@ -379,8 +379,10 @@ const STRINGS = {
     errLoad:     'Не удалось загрузить',
     timeAgo:     'назад · раунд',
     submitting:  'Запуск…',
-    errDomain:   'Введите домен',
-    errValues:   'Введите хотя бы одно ожидаемое значение',
+    errDomain:        'Введите домен',
+    errValues:        'Введите хотя бы одно ожидаемое значение',
+    errLimitWatches:  'Лимит: не более 10 доменов на пользователя',
+    errLimitUsers:    'Бот сейчас переполнен — новые пользователи не принимаются',
     errFailed:   'Ошибка',
     recordLabel: 'запись',
     pending:     'ожидание',
@@ -431,8 +433,10 @@ const STRINGS = {
     errLoad:     "Couldn't load",
     timeAgo:     'ago · round',
     submitting:  'Starting…',
-    errDomain:   'Enter a domain',
-    errValues:   'Enter at least one expected value',
+    errDomain:        'Enter a domain',
+    errValues:        'Enter at least one expected value',
+    errLimitWatches:  'Limit: max 10 domains per user',
+    errLimitUsers:    'Bot is at capacity — no new users at this time',
     errFailed:   'Failed',
     recordLabel: 'record',
     pending:     'pending',
@@ -655,7 +659,12 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       notify:{telegram_chat_ids:[chatId],progress:prog},
       status:'active'
     })});
-    if (!d.ok) throw new Error(d.error||d.message||t('errFailed'));
+    if (!d.ok) {
+      const errKey = d.error === 'limit_watches' ? 'errLimitWatches'
+                   : d.error === 'limit_users'   ? 'errLimitUsers'
+                   : null;
+      throw new Error(errKey ? t(errKey) : (d.error||d.message||t('errFailed')));
+    }
     tg?.HapticFeedback?.notificationOccurred('success');
     back();
   } catch(e) {

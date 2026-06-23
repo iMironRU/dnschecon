@@ -4,6 +4,7 @@ import { fetchWatchDefinition, listWatchIds, createWatchFile, deleteWatchFile } 
 import { validateInitData } from "./telegram.js";
 import { verifyGithubWebhook } from "./auth.js";
 import { invalidateRegistryCache } from "./resolvers.js";
+import { checkCreateLimits, registerWatch, unregisterWatch } from "./limits.js";
 
 export { WatchDO };
 
@@ -155,6 +156,10 @@ async function handleCreateWatch(request: Request, env: Env): Promise<Response> 
   const err = validateWatch(def);
   if (err) return json({ ok: false, error: err }, 400);
 
+  const chatId = def.notify.telegram_chat_ids[0];
+  const limitCheck = await checkCreateLimits(chatId, env);
+  if (!limitCheck.ok) return json({ ok: false, error: limitCheck.error }, 403);
+
   try {
     await createWatchFile(def, env);
     const stub = getDoStub(def.id, env);
@@ -163,6 +168,9 @@ async function handleCreateWatch(request: Request, env: Env): Promise<Response> 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(def),
     });
+    if (resp.ok || resp.status === 200) {
+      await registerWatch(chatId, def.id, env);
+    }
     return new Response(resp.body, { status: resp.status, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     return json({ ok: false, error: String(e) }, 500);
@@ -172,8 +180,17 @@ async function handleCreateWatch(request: Request, env: Env): Promise<Response> 
 async function handleDeleteWatch(id: string, env: Env): Promise<Response> {
   try {
     const stub = getDoStub(id, env);
+    // Get owner chatId from DO state before cancelling
+    const stateResp = await stub.fetch(doUrl(id, "state")).catch(() => null);
+    let chatId: number | null = null;
+    if (stateResp?.ok) {
+      const data: { ok: boolean; state?: { definition: { notify: { telegram_chat_ids: number[] } } } } =
+        await stateResp.json();
+      chatId = data.state?.definition?.notify?.telegram_chat_ids?.[0] ?? null;
+    }
     await stub.fetch(doUrl(id, "cancel"), { method: "POST" }).catch(() => {});
     await deleteWatchFile(id, env);
+    if (chatId) await unregisterWatch(chatId, id, env);
     return json({ ok: true });
   } catch (e) {
     return json({ ok: false, error: String(e) }, 500);
