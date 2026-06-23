@@ -1,0 +1,31 @@
+name = "dnschecon"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[durable_objects]
+bindings = [
+  { name = "WATCH_DO", class_name = "WatchDO" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["WatchDO"]
+
+[[kv_namespaces]]
+binding = "DNSCHECON_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+[vars]
+GITHUB_OWNER = ""
+GITHUB_REPO = ""
+GITHUB_BRANCH = "main"
+
+# Secrets (set via wrangler secret put):
+# TELEGRAM_BOT_TOKEN
+# GITHUB_TOKEN
+# GITHUB_WEBHOOK_SECRET
+
+[assets]
+directory = "../miniapp"
+binding = "ASSETS"

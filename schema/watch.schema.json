@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dnschecon/watch.schema.json",
+  "title": "Watch",
+  "type": "object",
+  "required": ["id", "domain", "type", "expected", "resolvers", "convergence", "backoff", "notify", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,40}$",
+      "description": "Unique watch id, must match filename"
+    },
+    "domain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": ["A", "AAAA", "CNAME", "MX", "TXT", "NS"]
+    },
+    "expected": {
+      "type": "object",
+      "required": ["values", "match"],
+      "additionalProperties": false,
+      "properties": {
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "match": {
+          "type": "string",
+          "enum": ["exact-set", "contains"]
+        }
+      }
+    },
+    "resolvers": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^preset:.+$"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "provider", "ecs", "region"],
+            "additionalProperties": false,
+            "properties": {
+              "name":     { "type": "string" },
+              "provider": { "type": "string" },
+              "ecs":      { "type": ["string", "null"] },
+              "region":   { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "convergence": {
+      "type": "object",
+      "required": ["mode", "confirmations"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["all", "quorum"]
+        },
+        "quorum": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "confirmations": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      }
+    },
+    "backoff": {
+      "type": "object",
+      "required": ["schedule_sec", "hold_last", "jitter_pct", "timeout_sec"],
+      "additionalProperties": false,
+      "properties": {
+        "schedule_sec": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "exclusiveMinimum": 0 }
+        },
+        "hold_last": { "type": "boolean" },
+        "jitter_pct": { "type": "number", "minimum": 0 },
+        "timeout_sec": { "type": "integer", "exclusiveMinimum": 0 }
+      }
+    },
+    "precheck_authoritative": {
+      "type": "boolean",
+      "default": false
+    },
+    "notify": {
+      "type": "object",
+      "required": ["telegram_chat_ids", "progress"],
+      "additionalProperties": false,
+      "properties": {
+        "telegram_chat_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer" }
+        },
+        "progress": {
+          "type": "string",
+          "enum": ["off", "edit-in-place", "every-round"]
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "done", "timeout", "error", "paused"]
+    }
+  }
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DNSChecon</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="/miniapp/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="screen-list" class="screen active">
+      <div class="header">
+        <h1>DNSChecon</h1>
+        <button id="btn-new" class="btn-primary">+ New Watch</button>
+      </div>
+      <div id="watches-list" class="watches-list">
+        <div class="loading">Loading…</div>
+      </div>
+    </div>
+
+    <div id="screen-create" class="screen">
+      <div class="header">
+        <button id="btn-back-create" class="btn-back">← Back</button>
+        <h1>New Watch</h1>
+      </div>
+      <form id="form-create" class="form">
+        <div class="field">
+          <label>Domain</label>
+          <input type="text" id="f-domain" placeholder="app.example.com" required>
+        </div>
+        <div class="field">
+          <label>Record Type</label>
+          <select id="f-type">
+            <option value="A">A</option>
+            <option value="AAAA">AAAA</option>
+            <option value="CNAME">CNAME</option>
+            <option value="MX">MX</option>
+            <option value="TXT">TXT</option>
+            <option value="NS">NS</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Expected Values <span class="hint">(one per line)</span></label>
+          <textarea id="f-values" rows="3" placeholder="203.0.113.10&#10;203.0.113.11" required></textarea>
+        </div>
+        <div class="field">
+          <label>Match Mode</label>
+          <select id="f-match">
+            <option value="exact-set">Exact set</option>
+            <option value="contains">Contains</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resolver Preset</label>
+          <select id="f-preset">
+            <option value="preset:global-8">global-8 (6 regions)</option>
+            <option value="preset:quick-check">quick-check (US + CF)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Telegram Chat ID for notifications</label>
+          <input type="number" id="f-chatid" placeholder="123456789" required>
+        </div>
+        <div class="field">
+          <label>
+            <input type="checkbox" id="f-precheck"> Precheck authoritative NS
+          </label>
+        </div>
+        <div id="form-error" class="error hidden"></div>
+        <button type="submit" class="btn-primary">Start Watching</button>
+      </form>
+    </div>
+
+    <div id="screen-detail" class="screen">
+      <div class="header">
+        <button id="btn-back-detail" class="btn-back">← Back</button>
+        <h1 id="detail-title">Watch Detail</h1>
+      </div>
+      <div id="detail-content" class="detail-content">
+        <div class="loading">Loading…</div>
+      </div>
+      <div class="detail-actions">
+        <button id="btn-pause" class="btn-secondary">Pause</button>
+        <button id="btn-resume" class="btn-secondary hidden">Resume</button>
+        <button id="btn-cancel" class="btn-danger">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/miniapp/app.js"></script>
+</body>
+</html>

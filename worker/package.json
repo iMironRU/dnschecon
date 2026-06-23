@@ -1,0 +1,18 @@
+{
+  "name": "dnschecon-worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^3.91.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

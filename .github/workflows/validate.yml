@@ -1,0 +1,31 @@
+name: Validate watches and resolvers
+
+on:
+  pull_request:
+    paths:
+      - "watches/**"
+      - "resolvers/**"
+      - "schema/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli js-yaml
+
+      - name: Validate watch files
+        run: node scripts/validate-watches.js
+
+      - name: Type-check Worker
+        working-directory: worker
+        run: |
+          npm ci
+          npm run type-check

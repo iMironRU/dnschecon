@@ -1,0 +1,27 @@
+presets:
+  global-8:
+    - { name: google-de,  provider: google,     ecs: "85.214.0.0/24",   region: EU/DE }
+    - { name: google-us,  provider: google,     ecs: "23.252.0.0/24",   region: US }
+    - { name: google-jp,  provider: google,     ecs: "126.0.0.0/24",    region: JP }
+    - { name: google-br,  provider: google,     ecs: "200.160.0.0/24",  region: BR }
+    - { name: google-ru,  provider: google,     ecs: "77.88.8.0/24",    region: RU }
+    - { name: google-au,  provider: google,     ecs: "1.128.0.0/24",    region: AU }
+    - { name: cloudflare, provider: cloudflare, ecs: null,              region: GLOBAL }
+
+  quick-check:
+    - { name: google-us,  provider: google,     ecs: "23.252.0.0/24",  region: US }
+    - { name: cloudflare, provider: cloudflare, ecs: null,             region: GLOBAL }
+
+providers:
+  google:
+    kind: doh-json
+    url: "https://dns.google/resolve"
+    ecs: true
+  cloudflare:
+    kind: doh-json
+    url: "https://cloudflare-dns.com/dns-query"
+    ecs: false
+  quad9:
+    kind: doh-wire
+    url: "https://dns.quad9.net/dns-query"
+    ecs: false
