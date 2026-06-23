@@ -14,11 +14,11 @@ new_classes = ["WatchDO"]
 
 [[kv_namespaces]]
 binding = "DNSCHECON_KV"
-id = "YOUR_KV_NAMESPACE_ID"
+id = "b2514849f88d4289b022e904587c1994"
 
 [vars]
-GITHUB_OWNER = ""
-GITHUB_REPO = ""
+GITHUB_OWNER = "iMironRU"
+GITHUB_REPO = "dnschecon"
 GITHUB_BRANCH = "main"
 
 # Secrets (set via wrangler secret put):
