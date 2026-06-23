@@ -60,10 +60,20 @@ async function createRepoFile(
   env: Env
 ): Promise<void> {
   const url = `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`;
+
+  // GitHub requires sha when updating an existing file
+  let sha: string | undefined;
+  const existing = await ghFetch(`${url}?ref=${env.GITHUB_BRANCH}`, env);
+  if (existing.ok) {
+    const data: { sha: string } = await existing.json();
+    sha = data.sha;
+  }
+
   const body = JSON.stringify({
     message,
     content: btoa(content),
     branch: env.GITHUB_BRANCH,
+    ...(sha ? { sha } : {}),
   });
   const resp = await ghFetch(url, env, { method: "PUT", body });
   if (!resp.ok && resp.status !== 201) {
