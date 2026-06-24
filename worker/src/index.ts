@@ -243,7 +243,13 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
       parse_mode: "HTML",
       text: WELCOME_TEXT,
       reply_markup: {
-        inline_keyboard: [[{ text: "🚀 Открыть DNSChecon", web_app: { url: WORKER_URL } }]],
+        keyboard: [
+          [{ text: "📡 Добавить мониторинг" }, { text: "📋 Мои мониторинги" }],
+          [{ text: "🗑 Удалить мониторинг" },  { text: "❓ Помощь" }],
+          [{ text: "🚀 Открыть приложение", web_app: { url: WORKER_URL } }],
+        ],
+        resize_keyboard: true,
+        is_persistent: true,
       },
     });
     return new Response("OK");
@@ -261,8 +267,26 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
     return new Response("OK");
   }
 
+  // Map persistent keyboard button labels to commands
+  const BUTTON_CMDS: Record<string, string> = {
+    "📡 Добавить мониторинг": "/watch",
+    "📋 Мои мониторинги":     "/list",
+    "🗑 Удалить мониторинг":  "/delete",
+    "❓ Помощь":              "/help",
+  };
+  const mappedText = BUTTON_CMDS[text] ?? text;
+
+  if (mappedText === "/help") {
+    await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: HELP_TEXT,
+    });
+    return new Response("OK");
+  }
+
   // /watch, /list, /delete, /cancel + conversation continuations
-  await handleMessage(chatId, text, env);
+  await handleMessage(chatId, mappedText, env);
 
   return new Response("OK");
 }
