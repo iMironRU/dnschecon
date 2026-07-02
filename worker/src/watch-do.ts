@@ -217,8 +217,8 @@ export class WatchDO implements DurableObject {
     const state = await this.loadState();
     if (!state) return json({ ok: false, error: "not initialized" }, 404);
     if (state.status !== "active") return json({ ok: false, error: "not active" }, 400);
-    await this.state.storage.deleteAlarm();
-    await this.alarm();
+    // Reschedule alarm to fire in 1s — triggers the normal poll cycle immediately
+    await this.state.storage.setAlarm(Date.now() + 1000);
     return json({ ok: true });
   }
 
