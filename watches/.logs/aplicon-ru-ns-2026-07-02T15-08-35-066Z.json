@@ -1,0 +1,86 @@
+{
+  "id": "aplicon-ru-ns",
+  "status": "done",
+  "startedAt": "2026-07-02T09:45:03.116Z",
+  "completedAt": "2026-07-02T15:08:35.066Z",
+  "roundNo": 7,
+  "perResolverState": {
+    "google-de": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "b.ns.selectel.ru.",
+        "c.ns.selectel.ru.",
+        "d.ns.selectel.ru.",
+        "a.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    },
+    "google-us": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "b.ns.selectel.ru.",
+        "d.ns.selectel.ru.",
+        "c.ns.selectel.ru.",
+        "a.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    },
+    "google-jp": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "c.ns.selectel.ru.",
+        "b.ns.selectel.ru.",
+        "d.ns.selectel.ru.",
+        "a.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    },
+    "google-br": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "c.ns.selectel.ru.",
+        "b.ns.selectel.ru.",
+        "d.ns.selectel.ru.",
+        "a.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    },
+    "google-ru": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "c.ns.selectel.ru.",
+        "a.ns.selectel.ru.",
+        "d.ns.selectel.ru.",
+        "b.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    },
+    "google-au": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "a.ns.selectel.ru.",
+        "b.ns.selectel.ru.",
+        "d.ns.selectel.ru.",
+        "c.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    },
+    "cloudflare": {
+      "result": "match",
+      "observedTtl": 3600,
+      "observedValues": [
+        "b.ns.selectel.ru.",
+        "a.ns.selectel.ru.",
+        "c.ns.selectel.ru.",
+        "d.ns.selectel.ru."
+      ],
+      "lastUpdated": 1783004914919
+    }
+  }
+}
