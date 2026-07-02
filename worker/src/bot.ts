@@ -240,8 +240,9 @@ async function confirmCreate(chatId: number, conv: ConvState, env: Env): Promise
     resolvers: "preset:global-8",
     convergence: { mode: "all" as const, confirmations: 1 },
     backoff: {
-      schedule_sec: [30, 30, 60, 60, 120, 300, 600, 1800, 3600],
-      hold_last: true,
+      initial_sec: 30,
+      multiplier: 2,
+      max_sec: 3600,
       jitter_pct: 10,
       timeout_sec: 172800,
     },

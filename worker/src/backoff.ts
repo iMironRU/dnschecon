@@ -1,11 +1,8 @@
 import type { WatchDefinition } from "./types.js";
 
 export function nextAlarmDelay(def: WatchDefinition, roundNo: number): number {
-  const { schedule_sec, hold_last, jitter_pct } = def.backoff;
-  const idx = roundNo < schedule_sec.length ? roundNo : hold_last ? schedule_sec.length - 1 : -1;
-  if (idx < 0) return -1; // schedule exhausted without hold_last
-
-  const base = schedule_sec[idx];
+  const { initial_sec, multiplier, max_sec, jitter_pct } = def.backoff;
+  const base = Math.min(initial_sec * Math.pow(multiplier, roundNo), max_sec);
   const jitter = base * (jitter_pct / 100) * (Math.random() * 2 - 1);
   return Math.max(1, Math.round(base + jitter)) * 1000;
 }

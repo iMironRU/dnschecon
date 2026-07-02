@@ -43,6 +43,8 @@ export class WatchDO implements DurableObject {
         return this.handleResume();
       case "cancel":
         return this.handleCancel();
+      case "poll":
+        return this.handlePoll();
       default:
         return new Response("Not found", { status: 404 });
     }
@@ -208,6 +210,15 @@ export class WatchDO implements DurableObject {
     await this.saveState(state);
     const delayMs = nextAlarmDelay(state.definition, state.roundNo);
     await this.state.storage.setAlarm(Date.now() + delayMs);
+    return json({ ok: true });
+  }
+
+  private async handlePoll(): Promise<Response> {
+    const state = await this.loadState();
+    if (!state) return json({ ok: false, error: "not initialized" }, 404);
+    if (state.status !== "active") return json({ ok: false, error: "not active" }, 400);
+    await this.state.storage.deleteAlarm();
+    await this.alarm();
     return json({ ok: true });
   }
 

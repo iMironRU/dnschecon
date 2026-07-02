@@ -89,6 +89,10 @@ async function handleApi(request: Request, env: Env, url: URL): Promise<Response
     return handleStartWatch(id, env);
   }
 
+  if (method === "POST" && sub === "/poll") {
+    return doAction(id, "poll", env);
+  }
+
   if (method === "DELETE" && sub === "") {
     return handleDeleteWatch(id, env);
   }
@@ -424,8 +428,9 @@ function applyDefaults(partial: Partial<WatchDefinition>): WatchDefinition {
       ...partial.convergence,
     },
     backoff: {
-      schedule_sec: [30, 30, 60, 60, 120, 300, 600, 1800, 3600],
-      hold_last: true,
+      initial_sec: 30,
+      multiplier: 2,
+      max_sec: 3600,
       jitter_pct: 10,
       timeout_sec: 172800,
       ...partial.backoff,
@@ -443,7 +448,7 @@ function validateWatch(def: WatchDefinition): string | null {
   if (!def.expected.values.length) return "Expected values empty";
   if (!["exact-set", "contains"].includes(def.expected.match)) return "Invalid match mode";
   if (!def.notify.telegram_chat_ids.length) return "Missing telegram_chat_ids";
-  if (def.backoff.timeout_sec < def.backoff.schedule_sec[0]) return "timeout_sec < first backoff interval";
+  if (def.backoff.timeout_sec < def.backoff.initial_sec) return "timeout_sec < initial_sec";
   return null;
 }
 

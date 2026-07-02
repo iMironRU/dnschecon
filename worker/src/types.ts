@@ -26,8 +26,9 @@ export interface WatchDefinition {
     confirmations: number;
   };
   backoff: {
-    schedule_sec: number[];
-    hold_last: boolean;
+    initial_sec: number;
+    multiplier: number;
+    max_sec: number;
     jitter_pct: number;
     timeout_sec: number;
   };

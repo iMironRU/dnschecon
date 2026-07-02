@@ -325,6 +325,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
 
   <div class="act-bar">
     <button class="btn-sec" id="btn-pause"            data-i18n="btnPause"></button>
+    <button class="btn-sec hidden" id="btn-poll"      data-i18n="btnPoll"></button>
     <button class="btn-sec hidden" id="btn-resume"    data-i18n="btnResume"></button>
     <button class="btn-sec hidden" id="btn-retry"     data-i18n="btnRetry"></button>
     <button class="btn-del hidden" id="btn-cancel"    data-i18n="btnCancel"></button>
@@ -366,6 +367,7 @@ const STRINGS = {
     lblTimeout:  'Осталось до сдачи',
     secResolvers:'Резолверы',
     btnPause:    'Пауза',
+    btnPoll:     'Проверить сейчас',
     btnResume:   'Продолжить',
     btnRetry:    'Повторить',
     btnCancel:   'Остановить',
@@ -420,6 +422,7 @@ const STRINGS = {
     lblTimeout:  'Expires in',
     secResolvers:'Resolvers',
     btnPause:    'Pause',
+    btnPoll:     'Check now',
     btnResume:   'Resume',
     btnRetry:    'Retry',
     btnCancel:   'Stop',
@@ -744,6 +747,7 @@ function renderDetail(s) {
   const a=s.status==='active', p=s.status==='paused';
   const retryable = s.status==='error'||s.status==='timeout';
   document.getElementById('btn-pause').classList.toggle('hidden',!a);
+  document.getElementById('btn-poll').classList.toggle('hidden',!a);
   document.getElementById('btn-resume').classList.toggle('hidden',!p);
   document.getElementById('btn-retry').classList.toggle('hidden',!retryable);
   document.getElementById('btn-cancel').classList.toggle('hidden',!a&&!p);
@@ -752,7 +756,7 @@ function renderDetail(s) {
 function startPoll(){ stopPoll(); pollT=setInterval(refreshDetail,4000); }
 function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
 
-['pause','resume','cancel','retry'].forEach(action=>{
+['pause','poll','resume','cancel','retry'].forEach(action=>{
   document.getElementById('btn-'+action).addEventListener('click',async()=>{
     if (action==='cancel'&&!confirm(t('confirmCancel'))) return;
     haptic('medium');
