@@ -368,6 +368,7 @@ const STRINGS = {
     secResolvers:'Резолверы',
     btnPause:    'Пауза',
     btnPoll:     'Проверить сейчас',
+    btnPolling:  'Проверяем…',
     btnResume:   'Продолжить',
     btnRetry:    'Повторить',
     btnCancel:   'Остановить',
@@ -423,6 +424,7 @@ const STRINGS = {
     secResolvers:'Resolvers',
     btnPause:    'Pause',
     btnPoll:     'Check now',
+    btnPolling:  'Checking…',
     btnResume:   'Resume',
     btnRetry:    'Retry',
     btnCancel:   'Stop',
@@ -756,7 +758,7 @@ function renderDetail(s) {
 function startPoll(){ stopPoll(); pollT=setInterval(refreshDetail,4000); }
 function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
 
-['pause','poll','resume','cancel','retry'].forEach(action=>{
+['pause','resume','cancel','retry'].forEach(action=>{
   document.getElementById('btn-'+action).addEventListener('click',async()=>{
     if (action==='cancel'&&!confirm(t('confirmCancel'))) return;
     haptic('medium');
@@ -769,6 +771,30 @@ function stopPoll() { if(pollT){clearInterval(pollT);pollT=null;} }
       btn.disabled = false;
     }
   });
+});
+
+document.getElementById('btn-poll').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-poll');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ ' + t('btnPolling');
+  haptic('medium');
+  try {
+    await api(`/api/watches/${watchId}/poll`, { method: 'POST' });
+    // Fast-poll for 15s: refresh every 1s to show results quickly
+    let ticks = 0;
+    const fastPoll = setInterval(async () => {
+      await refreshDetail();
+      if (++ticks >= 15) {
+        clearInterval(fastPoll);
+        btn.textContent = orig;
+        btn.disabled = false;
+      }
+    }, 1000);
+  } catch {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
 });
 
 document.getElementById('btn-delete').addEventListener('click', async () => {

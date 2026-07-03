@@ -243,11 +243,9 @@ export class WatchDO implements DurableObject {
     const text = buildFinalText(state);
     const def = state.definition;
     for (const chatId of def.notify.telegram_chat_ids) {
-      if (def.notify.progress === "edit-in-place" && state.progressMessageId) {
-        await editMessage(this.env.TELEGRAM_BOT_TOKEN, chatId, state.progressMessageId, text);
-      } else {
-        await sendMessage(this.env.TELEGRAM_BOT_TOKEN, chatId, text);
-      }
+      // Always send a new message for final status so the user gets a push notification.
+      // Edits are silent — the phone doesn't ring for them.
+      await sendMessage(this.env.TELEGRAM_BOT_TOKEN, chatId, text);
     }
   }
 
