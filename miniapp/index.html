@@ -419,8 +419,9 @@ const STRINGS = {
     submitting:  'Запуск…',
     errDomain:        'Введите домен',
     errValues:        'Введите хотя бы одно ожидаемое значение',
-    errLimitWatches:  'Лимит: не более 10 доменов на пользователя',
-    errLimitUsers:    'Бот сейчас переполнен — новые пользователи не принимаются',
+    errLimitWatches:   'Лимит: не более 10 доменов на пользователя',
+    errLimitUsers:     'Бот сейчас переполнен — новые пользователи не принимаются',
+    errPrecheckFailed: '⚠️ Precheck не прошёл — NS-записи не найдены для домена. Попробуйте выключить «Precheck NS» или проверьте домен.',
     errFailed:   'Ошибка',
     recordLabel: 'запись',
     pending:     'ожидание',
@@ -481,8 +482,9 @@ const STRINGS = {
     submitting:  'Starting…',
     errDomain:        'Enter a domain',
     errValues:        'Enter at least one expected value',
-    errLimitWatches:  'Limit: max 10 domains per user',
-    errLimitUsers:    'Bot is at capacity — no new users at this time',
+    errLimitWatches:   'Limit: max 10 domains per user',
+    errLimitUsers:     'Bot is at capacity — no new users at this time',
+    errPrecheckFailed: '⚠️ Precheck failed — no NS records found for this domain. Try disabling "Precheck NS" or check the domain name.',
     errFailed:   'Failed',
     recordLabel: 'record',
     pending:     'pending',
@@ -712,10 +714,11 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
       status:'active'
     })});
     if (!d.ok) {
-      const errKey = d.error === 'limit_watches' ? 'errLimitWatches'
-                   : d.error === 'limit_users'   ? 'errLimitUsers'
+      const errKey = d.error === 'limit_watches'   ? 'errLimitWatches'
+                   : d.error === 'limit_users'     ? 'errLimitUsers'
+                   : d.error === 'precheck_failed' ? 'errPrecheckFailed'
                    : null;
-      throw new Error(errKey ? t(errKey) : (d.error||d.message||t('errFailed')));
+      throw new Error(errKey ? t(errKey) : (d.message || d.error || t('errFailed')));
     }
     tg?.HapticFeedback?.notificationOccurred('success');
     back();
