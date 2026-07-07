@@ -5,7 +5,7 @@ import { validateInitData } from "./telegram.js";
 import { verifyGithubWebhook } from "./auth.js";
 import { invalidateRegistryCache } from "./resolvers.js";
 import { checkCreateLimits, registerWatch, unregisterWatch } from "./limits.js";
-import { handleMessage, handleCallback, answerCbq } from "./bot.js";
+import { handleMessage, handleCallback } from "./bot.js";
 
 export { WatchDO };
 
@@ -242,6 +242,16 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
   const cmd = text.split("@")[0];
 
   if (cmd === "/start") {
+    // Register bot commands menu (idempotent — safe to repeat)
+    tgCall(env.TELEGRAM_BOT_TOKEN, "setMyCommands", {
+      commands: [
+        { command: "watch",  description: "Добавить мониторинг DNS" },
+        { command: "list",   description: "Мои мониторинги" },
+        { command: "delete", description: "Удалить мониторинг" },
+        { command: "lookup", description: "Посмотреть DNS-записи домена" },
+        { command: "help",   description: "Справка" },
+      ],
+    }).catch(() => {});
     await tgCall(env.TELEGRAM_BOT_TOKEN, "sendMessage", {
       chat_id: chatId,
       parse_mode: "HTML",
@@ -309,6 +319,7 @@ const WELCOME_TEXT = `👋 <b>Привет! Я DNSChecon</b> — монитор 
 /watch — добавить мониторинг
 /list — список активных мониторингов
 /delete — удалить мониторинг
+/lookup — проверить DNS-записи домена
 /help — подробная справка
 
 👇 Или открой приложение для полного интерфейса:`;
@@ -319,6 +330,7 @@ const HELP_TEXT = `📖 <b>DNSChecon — справка</b>
 /watch — пошаговый диалог для добавления мониторинга
 /list — список ваших мониторингов со статусами
 /delete — удалить мониторинг (с выбором из списка)
+/lookup &lt;домен&gt; — посмотреть все DNS-записи домена
 /cancel — отменить текущий диалог
 
 <b>Типы записей:</b> A, AAAA, CNAME, MX, TXT, NS

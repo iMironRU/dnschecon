@@ -268,6 +268,51 @@ async function confirmCreate(chatId: number, conv: ConvState, env: Env): Promise
   }
 }
 
+// ── /lookup ────────────────────────────────────────────────────────────────
+
+const LOOKUP_TYPES = ["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA"];
+
+async function dohQuery(domain: string, type: string): Promise<{ data: string }[]> {
+  const url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${type}`;
+  const r = await fetch(url, { headers: { Accept: "application/dns-json" } });
+  if (!r.ok) return [];
+  const d = (await r.json()) as { Answer?: { data: string; TTL: number }[] };
+  return d.Answer ?? [];
+}
+
+export async function handleLookup(chatId: number, domain: string, env: Env): Promise<void> {
+  if (!domain || !domain.includes(".")) {
+    await send(
+      env.TELEGRAM_BOT_TOKEN,
+      chatId,
+      "⚠️ Укажите домен после команды.\n<i>Пример: /lookup example.com</i>"
+    );
+    return;
+  }
+  await send(env.TELEGRAM_BOT_TOKEN, chatId, `🔍 Запрашиваю записи для <code>${domain}</code>…`);
+
+  const results = await Promise.all(
+    LOOKUP_TYPES.map(async (type) => {
+      const answers = await dohQuery(domain, type).catch(() => []);
+      return { type, answers };
+    })
+  );
+
+  const lines: string[] = [`🔍 <b>DNS: ${domain}</b>\n`];
+  let hasAny = false;
+
+  for (const { type, answers } of results) {
+    if (!answers.length) continue;
+    hasAny = true;
+    const vals = answers.map((a) => a.data.replace(/\.$/, "")).join("\n    ");
+    const ttl = (answers as { TTL?: number }[])[0]?.TTL != null ? ` <i>(TTL ${(answers as { TTL?: number }[])[0].TTL}s)</i>` : "";
+    lines.push(`<b>${type}</b>${ttl}\n    <code>${vals}</code>`);
+  }
+
+  if (!hasAny) lines.push("Записей не найдено.");
+  await send(env.TELEGRAM_BOT_TOKEN, chatId, lines.join("\n"));
+}
+
 // ── /list ──────────────────────────────────────────────────────────────────
 
 async function handleList(chatId: number, env: Env): Promise<void> {
@@ -364,6 +409,11 @@ export async function handleMessage(chatId: number, text: string, env: Env): Pro
   if (cmd === "/cancel") {
     await clearConv(chatId, env);
     await send(t, chatId, "Диалог отменён.");
+    return;
+  }
+  if (cmd === "/lookup" || cmd.startsWith("/lookup ") || cmd.startsWith("/lookup\t")) {
+    const domain = text.replace(/^\/lookup(?:@\S+)?\s*/i, "").split(/\s+/)[0] ?? "";
+    await handleLookup(chatId, domain, env);
     return;
   }
 

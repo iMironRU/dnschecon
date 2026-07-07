@@ -184,6 +184,15 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   cursor:pointer;transition:opacity .15s}
 .btn-del:active{opacity:.65}
 .hidden{display:none!important}
+
+/* ── Lookup results ── */
+.lk-row{display:flex;align-items:flex-start;padding:11px 14px;border-bottom:.5px solid var(--div)}
+.lk-row:last-child{border-bottom:none}
+.lk-type{font-size:12px;font-weight:700;color:var(--hint);letter-spacing:.08em;width:54px;flex-shrink:0;padding-top:2px}
+.lk-vals{flex:1;min-width:0}
+.lk-val{font-size:13px;font-family:ui-monospace,monospace;word-break:break-all;line-height:1.5;color:var(--text)}
+.lk-val.lk-none{color:var(--hint);font-family:inherit}
+.lk-ttl{font-size:11px;color:var(--hint);margin-top:1px}
 </style>
 </head>
 <body>
@@ -198,6 +207,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
         <div class="hdr-sub" data-i18n="subtitle"></div>
       </div>
       <button class="lang-btn" id="btn-lang">EN</button>
+      <button class="hdr-btn" id="btn-lookup-open" aria-label="DNS Lookup">🔍</button>
       <button class="hdr-btn" id="btn-new" data-i18n-aria="btnNewLabel">+</button>
     </div>
     <div id="list-body"></div>
@@ -333,6 +343,31 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
   </div>
 </div>
 
+<!-- ══ LOOKUP ══════════════════════════════════════════════════════════════ -->
+<div id="p-lookup" class="page slide-right">
+  <div style="padding-bottom:32px">
+    <div class="hdr">
+      <div class="hdr-titles">
+        <div class="hdr-title" data-i18n="lookupTitle"></div>
+        <div class="hdr-sub"   data-i18n="lookupSub"></div>
+      </div>
+    </div>
+
+    <div class="f-body" style="margin-top:12px">
+      <div class="f-group">
+        <div class="f-row">
+          <input class="f-inp" id="lk-domain" type="text" placeholder="example.com"
+            autocomplete="off" autocapitalize="none" spellcheck="false"
+            style="text-align:left;font-size:15px">
+        </div>
+      </div>
+      <button class="btn-pri" id="btn-lk-search" data-i18n="lookupBtn"></button>
+    </div>
+
+    <div id="lk-results" style="margin-top:8px"></div>
+  </div>
+</div>
+
 </div><!-- #app -->
 
 <script>
@@ -396,6 +431,12 @@ const STRINGS = {
     sError:      'Ошибка',
     sPaused:     'Пауза',
     sUnknown:    '—',
+    lookupTitle: 'DNS Lookup',
+    lookupSub:   'Посмотреть записи домена',
+    lookupBtn:   'Проверить',
+    lookupEmpty: 'Записей не найдено',
+    lookupErr:   'Ошибка запроса',
+    lookupPlaceholder: 'Введите домен',
   },
   en: {
     subtitle:    'DNS propagation monitor',
@@ -452,6 +493,12 @@ const STRINGS = {
     sError:      'Error',
     sPaused:     'Paused',
     sUnknown:    '—',
+    lookupTitle: 'DNS Lookup',
+    lookupSub:   'Check domain records',
+    lookupBtn:   'Look up',
+    lookupEmpty: 'No records found',
+    lookupErr:   'Request failed',
+    lookupPlaceholder: 'Enter domain',
   }
 };
 
@@ -486,7 +533,7 @@ function applyLang() {
 }
 
 /* ── Navigation ───────────────────────────────────────── */
-const PAGES = { list:'p-list', create:'p-create', detail:'p-detail' };
+const PAGES = { list:'p-list', create:'p-create', detail:'p-detail', lookup:'p-lookup' };
 let stack = ['list'];
 let watchId = null, pollT = null;
 
@@ -812,6 +859,72 @@ document.getElementById('btn-delete').addEventListener('click', async () => {
   }
 });
 
+/* ── Lookup ───────────────────────────────────────────── */
+const LK_TYPES = ['A','AAAA','CNAME','MX','TXT','NS','SOA'];
+
+async function dohQuery(domain, type) {
+  const url = `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${type}`;
+  const r = await fetch(url, { headers: { Accept: 'application/dns-json' } });
+  if (!r.ok) throw new Error(`${r.status}`);
+  return r.json();
+}
+
+function formatAnswer(type, answer) {
+  if (!answer) return null;
+  const d = answer.data ?? '';
+  // Strip trailing dot from domain-like values
+  return String(d).replace(/\.$/, '');
+}
+
+async function doLookup() {
+  const domain = document.getElementById('lk-domain').value.trim();
+  if (!domain) return;
+  const btn = document.getElementById('btn-lk-search');
+  const res = document.getElementById('lk-results');
+  btn.disabled = true;
+  haptic('medium');
+  res.innerHTML = `<div class="empty"><div class="skel" style="height:18px;width:60%;border-radius:6px;margin:0 auto 10px"></div><div class="skel" style="height:14px;width:45%;border-radius:6px;margin:0 auto"></div></div>`;
+
+  try {
+    const results = await Promise.all(LK_TYPES.map(type =>
+      dohQuery(domain, type).then(d => ({ type, answers: d.Answer || [] })).catch(() => ({ type, answers: [] }))
+    ));
+
+    const hasAny = results.some(r => r.answers.length > 0);
+    if (!hasAny) {
+      res.innerHTML = `<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">${t('lookupEmpty')}</div></div>`;
+      return;
+    }
+
+    const rows = results.map(({ type, answers }) => {
+      const vals = answers.map(a => formatAnswer(type, a)).filter(Boolean);
+      const ttl  = answers[0]?.TTL != null ? `TTL ${answers[0].TTL}s` : '';
+      return `
+        <div class="lk-row">
+          <div class="lk-type">${type}</div>
+          <div class="lk-vals">
+            ${vals.length
+              ? vals.map(v => `<div class="lk-val">${v}</div>`).join('')
+              : `<div class="lk-val lk-none">—</div>`}
+            ${ttl ? `<div class="lk-ttl">${ttl}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    res.innerHTML = `
+      <div class="sec">${domain}</div>
+      <div style="padding:0 16px">
+        <div style="background:var(--bg2);border-radius:var(--r);overflow:hidden;border:.5px solid rgba(255,255,255,.06)">
+          ${rows}
+        </div>
+      </div>`;
+  } catch(e) {
+    res.innerHTML = `<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-title">${t('lookupErr')}</div><div class="empty-sub">${e.message}</div></div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 /* ── Boot ─────────────────────────────────────────────── */
 document.getElementById('btn-lang').addEventListener('click', () => {
   lang = lang === 'ru' ? 'en' : 'ru';
@@ -820,6 +933,13 @@ document.getElementById('btn-lang').addEventListener('click', () => {
   applyLang();
 });
 document.getElementById('btn-new').addEventListener('click',()=>nav('create'));
+document.getElementById('btn-lookup-open').addEventListener('click',()=>{
+  document.getElementById('lk-domain').value='';
+  document.getElementById('lk-results').innerHTML='';
+  nav('lookup');
+});
+document.getElementById('btn-lk-search').addEventListener('click', doLookup);
+document.getElementById('lk-domain').addEventListener('keydown', e => { if(e.key==='Enter') doLookup(); });
 if (tg) tg.BackButton.onClick(back);
 applyLang();
 loadWatches();
