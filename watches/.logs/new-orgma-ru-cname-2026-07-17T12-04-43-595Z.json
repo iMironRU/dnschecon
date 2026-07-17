@@ -1,0 +1,65 @@
+{
+  "id": "new-orgma-ru-cname",
+  "status": "done",
+  "startedAt": "2026-07-17T12:04:12.032Z",
+  "completedAt": "2026-07-17T12:04:43.595Z",
+  "roundNo": 1,
+  "perResolverState": {
+    "google-de": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    },
+    "google-us": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    },
+    "google-jp": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    },
+    "google-br": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    },
+    "google-ru": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    },
+    "google-au": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    },
+    "cloudflare": {
+      "result": "match",
+      "observedTtl": 30,
+      "observedValues": [
+        "imironru.github.io."
+      ],
+      "lastUpdated": 1784289883480
+    }
+  }
+}
